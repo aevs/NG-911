@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:weightSum="1">
+	<TextView android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:text="messageToPsapServer" />
+	<RelativeLayout android:layout_width="wrap_content"
+		android:layout_height="wrap_content">
+		<RadioGroup android:id="@+id/messagingProtocol"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:orientation="horizontal">
+			<RadioButton android:layout_height="wrap_content"
+				android:text="Real-time" android:id="@+id/RTP" android:layout_width="wrap_content"
+				android:checked="true">
+			</RadioButton>
+			<RadioButton android:layout_height="wrap_content"
+				android:text="Instant" android:id="@+id/SIMPLE"
+				android:layout_width="wrap_content">
+			</RadioButton>
+		</RadioGroup>
+	<Button android:layout_width="wrap_content" android:id="@+id/sendMessageButton"
+		android:layout_below="@id/messagingProtocol"
+		android:layout_height="wrap_content" 
+		android:text="Send">
+		</Button>
+	<EditText android:id="@+id/message" android:layout_height="wrap_content"
+		android:layout_below="@id/messagingProtocol"
+		android:hint="tap to enter message" 
+		android:layout_toRightOf="@id/sendMessageButton"
+		android:layout_marginLeft="15dp"
+		android:layout_width="fill_parent">
+		<requestFocus></requestFocus>
+	</EditText>
+	</RelativeLayout>
+	<Button android:layout_width="300dp" android:id="@+id/sendPhotoButton" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:layout_gravity="center_horizontal" android:text="Take and send photo"></Button>
+</LinearLayout>
