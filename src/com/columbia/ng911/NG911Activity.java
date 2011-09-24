@@ -8,9 +8,23 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import org.zoolu.sip.provider.SipProvider;
+import org.zoolu.sip.provider.SipStack;
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
+import org.zoolu.sip.message.Message;
+import org.zoolu.sip.message.MessageFactory;
+
 public class NG911Activity extends Activity {
+	
+	private SipProvider sip;
+	
     /** Called when the activity is first created. */
 	LocationManager locationManager;
 	ConnectivityManager connectivityManager;
@@ -37,6 +51,28 @@ public class NG911Activity extends Activity {
         }else{
         	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         }
+        
+        /* Send Message Test Button */
+        SipStack.debug_level = 0;
+    	//SipStack.log_path = "/data/data/com.columbia.ng911/files/";
+    	sip = new SipProvider("10.211.55.3", 0);
+    	
+        Button sendMessageButton = (Button)findViewById(R.id.sendMessageButton);
+        sendMessageButton.setOnClickListener(new OnClickListener() {
+    		public void onClick(View v) {
+    			if(v.getId() == R.id.sendMessageButton){
+    				
+    				TextView tv = (TextView)findViewById(R.id.message);
+    				String inputMessage = tv.getText().toString();
+    				
+    				Message msg = MessageFactory.createMessageRequest(sip,
+    						new NameAddress(new SipURL("test@10.211.55.3")),
+    						new NameAddress(new SipURL("test@10.211.55.2")), 
+    						inputMessage, "text/plain", inputMessage);
+    				sip.sendMessage(msg);
+    			}
+    		}
+    	});
     }
 	
 	LocationListener locationListener= new LocationListener(){
@@ -97,5 +133,4 @@ public class NG911Activity extends Activity {
 		// TODO Auto-generated method stub
 		super.onStop();
 	}
-	
 }
