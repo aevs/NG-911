@@ -8,6 +8,8 @@ import org.zoolu.sip.message.Message;
 import org.zoolu.sip.message.MessageFactory;
 import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sip.provider.SipStack;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
 
 import android.app.Activity;
 import android.content.Context;
@@ -43,6 +45,7 @@ public class NG911Activity extends Activity {
 	private static String TAG=NG911Activity.class.getName();
 	
 	private static TextView chatWindowTextView;
+	private AppController appController;
 	
     /** Called when the activity is first created. */
 	LocationManager locationManager;
@@ -97,14 +100,20 @@ public class NG911Activity extends Activity {
         /********************************
          *  Send Message Test Button 
          *******************************/
+        /* Send Message Test Button */
+    	/* SipStack.log_path = "/data/data/com.columbia.ng911/files/"; */
         SipStack.debug_level = 0;
-    	//SipStack.log_path = "/data/data/com.columbia.ng911/files/";
     	sip = new SipProvider("10.211.55.3", 0);
+    	
+    	// To Testing RTP Sesstion for RTT (Real Time Text)
+        //appController = new AppController("temp_id", new BufferedWriter(new OutputStreamWriter(System.out)), null);
+    	//appController.start("10.211.55.2", 5060, "10.211.55.3", 5060, 1, 1, 1);
     	
         Button sendMessageButton = (Button)findViewById(R.id.sendMessageButton);
         sendMessageButton.setOnClickListener(new OnClickListener() {
     		public void onClick(View v) {
     			if(v.getId() == R.id.sendMessageButton){
+    				//appController.processInput('J');
     				
     				TextView tv = (TextView)findViewById(R.id.message);
     				String inputMessage = tv.getText().toString();
@@ -114,6 +123,7 @@ public class NG911Activity extends Activity {
     						new NameAddress(new SipURL("test@10.211.55.2")), 
     						inputMessage, "text/plain", inputMessage);
     				sip.sendMessage(msg);
+    				
     			}
     		}
     	});
