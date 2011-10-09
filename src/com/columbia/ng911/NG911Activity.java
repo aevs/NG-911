@@ -1,5 +1,7 @@
 package com.columbia.ng911;
 
+import java.util.List;
+
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.address.SipURL;
 import org.zoolu.sip.message.Message;
@@ -8,31 +10,30 @@ import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sip.provider.SipStack;
 
 import android.app.Activity;
-import android.app.Service;
 import android.content.Context;
-import android.inputmethodservice.Keyboard.Key;
-import android.inputmethodservice.KeyboardView;
-import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
+import android.inputmethodservice.InputMethodService;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.KeyListener;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.KeyCharacterMap;
-import android.view.KeyCharacterMap.KeyData;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,8 @@ public class NG911Activity extends Activity {
 	
 	private SipProvider sip;
 	private static String TAG=NG911Activity.class.getName();
+	
+	private static TextView chatWindowTextView;
 	
     /** Called when the activity is first created. */
 	LocationManager locationManager;
@@ -49,9 +52,14 @@ public class NG911Activity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        /*
+        
+        chatWindowTextView=(TextView)findViewById(R.id.chatWindow);
+        
+        /*************************
          * Check for network connection
-         */
+         * 
+         * move to onStart()
+         *************************/
         connectivityManager=(ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
         if(networkInfo.isAvailable()){
@@ -61,9 +69,19 @@ public class NG911Activity extends Activity {
         	Toast.makeText(getApplicationContext(),"network is connected",Toast.LENGTH_SHORT).show();
 
         }
-        /*
+        
+        InputMethodManager ims= (InputMethodManager)this.getSystemService(INPUT_METHOD_SERVICE);
+        ims.showInputMethodPicker();
+        List<InputMethodInfo> methodList=ims.getInputMethodList();
+        int imeOption=sendMessageEditText.getImeOptions();
+
+   //        IBinder token=sendMessageEditText.getInputType();
+        
+        
+        /**************************
          * Check for location via GPS or network provider
-         */
+         * Move to onStart()
+         **************************/
         locationManager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
         boolean isGPSEnabled=locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if(isGPSEnabled){
@@ -73,7 +91,12 @@ public class NG911Activity extends Activity {
         	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         }
         
-        /* Send Message Test Button */
+        
+        
+        
+        /********************************
+         *  Send Message Test Button 
+         *******************************/
         SipStack.debug_level = 0;
     	//SipStack.log_path = "/data/data/com.columbia.ng911/files/";
     	sip = new SipProvider("10.211.55.3", 0);
@@ -95,6 +118,9 @@ public class NG911Activity extends Activity {
     		}
     	});
     }
+	
+	
+	
 	
 	LocationListener locationListener= new LocationListener(){
 
@@ -151,7 +177,7 @@ public class NG911Activity extends Activity {
 	
 		sendMessageEditText.setOnKeyListener(rttTextListener);
 		sendMessageEditText.addTextChangedListener(rttTextWatcher);
-//		InputMethodManager iMM=(InputMethodManager)this.getSystemService(Service.INPUT_METHOD_SERVICE);
+		//		InputMethodManager iMM=(InputMethodManager)this.getSystemService(Service.INPUT_METHOD_SERVICE);
 //		iMM.showSoftInput(getCurrentFocus(),0 );
 		super.onStart();
 	}
@@ -170,9 +196,11 @@ public class NG911Activity extends Activity {
 				if(keyCode==KeyEvent.KEYCODE_0){
 					Log.e(TAG,"caught 0");
 				}
+
 				char keyLabel=event.getDisplayLabel();
 				String keyLabelString=String.valueOf(keyLabel);
-				Log.e(TAG,"onKey() event keyLabel= "+keyLabelString+" keyCode= "+event.getKeyCode());
+				Log.e(TAG,"onKey() event keyLabel= "+keyLabelString+" keyCode= "
+						+event.getKeyCode()+" Unicode= "+event.getUnicodeChar());
 //				Toast.makeText(getApplicationContext(),keyLabel , 1000).show();
 //			}
 			return false;
@@ -187,6 +215,8 @@ public class NG911Activity extends Activity {
 			// TODO Auto-generated method stub
 			Log.e(TAG,"onTextChanged() new char sequence is "+s+" start="+start+" ,before= "+before+",count= "+count);
 			Log.e(TAG,"new charSequence is ="+s.subSequence(start,start+count));
+
+			chatWindowTextView.setText(s);
 		}
 		
 		@Override

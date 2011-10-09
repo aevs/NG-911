@@ -3,7 +3,18 @@
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent" android:weightSum="1">
 	<TextView android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:text="messageToPsapServer" />
+		android:id="@+id/chatWindow"
+		android:layout_height="wrap_content"
+		android:hint="Chat Window"
+		android:background="@android:drawable/alert_dark_frame"
+		android:scrollHorizontally="true" 
+		/>
+	<TextView android:layout_width="fill_parent"
+		android:paddingTop="10dp"
+		android:id="@+id/rttResponseWindow"
+		android:layout_height="@android:dimen/thumbnail_height"
+		android:background="@android:drawable/alert_light_frame" 
+		android:hint="RTT message from Psap server" />		
 	<RelativeLayout android:layout_width="wrap_content"
 		android:layout_height="wrap_content">
 		<RadioGroup android:id="@+id/messagingProtocol"
@@ -25,7 +36,8 @@
 		</Button>
 	<EditText android:id="@+id/message" android:layout_height="wrap_content"
 		android:layout_below="@id/messagingProtocol"
-		android:hint="tap to enter message" 
+		android:hint="tap to enter message"
+		android:inputType="textNoSuggestions"
 		android:layout_toRightOf="@id/sendMessageButton"
 		android:layout_marginLeft="15dp"
 		android:layout_width="fill_parent">
