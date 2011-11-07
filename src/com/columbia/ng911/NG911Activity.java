@@ -48,7 +48,6 @@ public class NG911Activity extends Activity {
 	private static String TAG=NG911Activity.class.getName();
 	
 	private static TextView chatWindowTextView;
-	private AppController appController;
 	
     /** Called when the activity is first created. */
 	LocationManager locationManager;
@@ -101,19 +100,28 @@ public class NG911Activity extends Activity {
         /********************************
          *  SipController Initialize
          *******************************/
-        sipController = new SipController ("test", "10.211.55.2", "5060");
+        sipController = new SipController ("test", "128.237.250.232", "5060");
         
-    	
-    	// To Testing RTP Sesstion for RTT (Real Time Text)
-        //appController = new AppController("temp_id", new BufferedWriter(new OutputStreamWriter(System.out)), null);
-    	//appController.start("10.211.55.2", 5060, "10.211.55.3", 5060, 1, 1, 1);
+        Button callButton = (Button)findViewById(R.id.call);
+        callButton.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v) {
+        		System.out.println("Outgoing call");
+        		sipController.call();
+        	}
+        });
+        
+        Button hangButton = (Button)findViewById(R.id.hang);
+        hangButton.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v) {
+        		System.out.println("Hang up call");
+        		sipController.hangup();
+        	}
+        });
     	
         Button sendMessageButton = (Button)findViewById(R.id.sendMessageButton);
         sendMessageButton.setOnClickListener(new OnClickListener() {
     		public void onClick(View v) {
     			if(v.getId() == R.id.sendMessageButton){
-    				//appController.processInput('J');
-    				
     				TextView tv = (TextView)findViewById(R.id.message);
     				String inputMessage = tv.getText().toString();
     				
@@ -226,7 +234,10 @@ public class NG911Activity extends Activity {
 			// TODO Auto-generated method stub
 			Log.e(TAG,"onTextChanged() new char sequence is "+s+" start="+start+" ,before= "+before+",count= "+count);
 			Log.e(TAG,"new charSequence is ="+s.subSequence(start,start+count));
-
+			
+			// RTT send
+			sipController.sendRTT(s.charAt(start));
+			
 			chatWindowTextView.setText(s);
 		}
 		

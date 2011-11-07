@@ -39,8 +39,8 @@ public class SipController implements SipProviderListener, TransactionClientList
 
         private String localIpAddress;
         //private int defaultIncomingPort = 5060;
-        private int defaultIncomingPort = 7070; // for testing
-
+        private int defaultIncomingPort = 7070; /* for testing */
+        
         SipController(String serverID, String ipAddress, String port) {
                 /* SipStack.log_path = "/data/data/com.columbia.ng911/files/"; */
                 SipStack.debug_level = 0;
@@ -61,6 +61,14 @@ public class SipController implements SipProviderListener, TransactionClientList
                 ua = new UserAgent(sip, this.serverIpAddress, this.localIpAddress);
                 ua.listen();
         }
+        
+        public void call() {
+        		ua.call(this.serverIpAddress);
+        }
+        
+        public void hangup() {
+        		ua.hangup();
+        }
 
         public void send(String text) {
                 Message msg = MessageFactory.createMessageRequest(sip,
@@ -69,6 +77,10 @@ public class SipController implements SipProviderListener, TransactionClientList
                                 text, "text/plain", text);
                 sip.sendMessage(msg);
                 System.out.println("Sent");
+        }
+        
+        public void sendRTT(char in) {
+        	ua.sendRTT(in);
         }
 
         @Override
@@ -104,7 +116,6 @@ public class SipController implements SipProviderListener, TransactionClientList
         @Override
         public void onReceivedMessage(SipProvider sip_provider, Message message) {
                 // TODO Auto-generated method stub
-                (new TransactionServer(sip_provider,message,null)).respondWith(MessageFactory.createResponse(message,200,SipResponses.reasonOf(200),null));
                 System.out.println("Message Received!");
                 System.out.println(message.getBody());
         }
