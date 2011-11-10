@@ -8,21 +8,18 @@ import org.zoolu.sip.message.Message;
 import org.zoolu.sip.message.MessageFactory;
 import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sip.provider.SipStack;
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.inputmethodservice.InputMethodService;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.KeyListener;
 import android.util.Log;
@@ -34,8 +31,7 @@ import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListAdapter;
-import android.widget.ListView;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,6 +42,8 @@ public class NG911Activity extends Activity {
 	
 	private static TextView chatWindowTextView;
 	private AppController appController;
+	
+	private static final int PHOTO_RESULT=4433;
 	
     /** Called when the activity is first created. */
 	LocationManager locationManager;
@@ -76,7 +74,7 @@ public class NG911Activity extends Activity {
         InputMethodManager ims= (InputMethodManager)this.getSystemService(INPUT_METHOD_SERVICE);
         ims.showInputMethodPicker();
         List<InputMethodInfo> methodList=ims.getInputMethodList();
-        int imeOption=sendMessageEditText.getImeOptions();
+//        int imeOption=sendMessageEditText.getImeOptions();
 
    //        IBinder token=sendMessageEditText.getInputType();
         
@@ -96,6 +94,13 @@ public class NG911Activity extends Activity {
         
         
         
+        /*******************************************
+         * 
+         * Camera button
+         * 
+         *******************************************/
+        Button cameraButton=(Button)findViewById(R.id.sendPhotoButton);
+        cameraButton.setOnClickListener(cameraButtonOnClickListener);
         
         /********************************
          *  Send Message Test Button 
@@ -112,6 +117,11 @@ public class NG911Activity extends Activity {
         Button sendMessageButton = (Button)findViewById(R.id.sendMessageButton);
         sendMessageButton.setOnClickListener(new OnClickListener() {
     		public void onClick(View v) {
+
+    			//Intent for starting preview..does not take photos yet.
+    			Intent intent=new Intent(getApplicationContext(), CameraCapture.class);
+    			startActivity(intent);
+    			
     			if(v.getId() == R.id.sendMessageButton){
     				//appController.processInput('J');
     				
@@ -123,14 +133,43 @@ public class NG911Activity extends Activity {
     						new NameAddress(new SipURL("test@10.211.55.2")), 
     						inputMessage, "text/plain", inputMessage);
     				sip.sendMessage(msg);
-    				
     			}
     		}
     	});
     }
 	
+
 	
-	
+    @Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// TODO Auto-generated method stub
+		super.onActivityResult(requestCode, resultCode, data);
+		if(!data.getExtras().isEmpty()){
+			if(requestCode==PHOTO_RESULT){
+				
+				Bitmap photoResult=(Bitmap) data.getExtras().get("data");
+				ImageView imageView=new ImageView(this.getApplicationContext());
+				imageView.setImageBitmap(photoResult);
+				setContentView(imageView);
+				
+			}
+		}
+	}
+
+
+
+	OnClickListener cameraButtonOnClickListener=new OnClickListener() {
+		
+		@Override
+		public void onClick(View arg0) {
+			// TODO Auto-generated method stub
+
+			
+			Intent intent= new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+			startActivityForResult(intent,PHOTO_RESULT);
+			
+		}
+	};
 	
 	LocationListener locationListener= new LocationListener(){
 
