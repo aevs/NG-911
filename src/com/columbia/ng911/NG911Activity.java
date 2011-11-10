@@ -1,5 +1,7 @@
 package com.columbia.ng911;
 
+import com.columbia.ng911.*;
+
 import java.util.List;
 
 import org.zoolu.sip.address.NameAddress;
@@ -36,12 +38,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class NG911Activity extends Activity {
+	/* For SIP */
+	private SipController sipController;
 	
-	private SipProvider sip;
 	private static String TAG=NG911Activity.class.getName();
 	
 	private static TextView chatWindowTextView;
-	private AppController appController;
 	
 	private static final int PHOTO_RESULT=4433;
 	
@@ -71,13 +73,14 @@ public class NG911Activity extends Activity {
 
         }
         
+        /* 
         InputMethodManager ims= (InputMethodManager)this.getSystemService(INPUT_METHOD_SERVICE);
         ims.showInputMethodPicker();
         List<InputMethodInfo> methodList=ims.getInputMethodList();
 //        int imeOption=sendMessageEditText.getImeOptions();
 
-   //        IBinder token=sendMessageEditText.getInputType();
-        
+        //IBinder token=sendMessageEditText.getInputType();
+        */
         
         /**************************
          * Check for location via GPS or network provider
@@ -86,10 +89,10 @@ public class NG911Activity extends Activity {
         locationManager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
         boolean isGPSEnabled=locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if(isGPSEnabled){
-        	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
         	
         }else{
-        	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
         }
         
         
@@ -102,17 +105,27 @@ public class NG911Activity extends Activity {
         Button cameraButton=(Button)findViewById(R.id.sendPhotoButton);
         cameraButton.setOnClickListener(cameraButtonOnClickListener);
         
+
         /********************************
-         *  Send Message Test Button 
+         *  SipController Initialize
          *******************************/
-        /* Send Message Test Button */
-    	/* SipStack.log_path = "/data/data/com.columbia.ng911/files/"; */
-        SipStack.debug_level = 0;
-    	sip = new SipProvider("10.211.55.3", 0);
-    	
-    	// To Testing RTP Sesstion for RTT (Real Time Text)
-        //appController = new AppController("temp_id", new BufferedWriter(new OutputStreamWriter(System.out)), null);
-    	//appController.start("10.211.55.2", 5060, "10.211.55.3", 5060, 1, 1, 1);
+        sipController = new SipController ("test", "128.237.250.232", "5060");
+        
+        Button callButton = (Button)findViewById(R.id.call);
+        callButton.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v) {
+        		System.out.println("Outgoing call");
+        		sipController.call();
+        	}
+        });
+        
+        Button hangButton = (Button)findViewById(R.id.hang);
+        hangButton.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v) {
+        		System.out.println("Hang up call");
+        		sipController.hangup();
+        	}
+        });
     	
         Button sendMessageButton = (Button)findViewById(R.id.sendMessageButton);
         sendMessageButton.setOnClickListener(new OnClickListener() {
@@ -123,16 +136,17 @@ public class NG911Activity extends Activity {
     			startActivity(intent);
     			
     			if(v.getId() == R.id.sendMessageButton){
-    				//appController.processInput('J');
-    				
     				TextView tv = (TextView)findViewById(R.id.message);
     				String inputMessage = tv.getText().toString();
     				
-    				Message msg = MessageFactory.createMessageRequest(sip,
-    						new NameAddress(new SipURL("test@10.211.55.3")),
-    						new NameAddress(new SipURL("test@10.211.55.2")), 
-    						inputMessage, "text/plain", inputMessage);
-    				sip.sendMessage(msg);
+//    				Message msg = MessageFactory.createMessageRequest(sip,
+//    						new NameAddress(new SipURL("test@10.211.55.3")),
+//    						new NameAddress(new SipURL("test@10.211.55.2")), 
+//    						inputMessage, "text/plain", inputMessage);
+//    				sip.sendMessage(msg);
+    			
+    				sipController.send(inputMessage);
+    				
     			}
     		}
     	});
@@ -172,12 +186,18 @@ public class NG911Activity extends Activity {
 	};
 	
 	LocationListener locationListener= new LocationListener(){
-
 		@Override
 		public void onLocationChanged(Location location) {
-			// TODO Auto-generated method stub
+			/*
 			Toast.makeText(getApplicationContext(),"location is"+location.toString()
 					, Toast.LENGTH_LONG).show();
+			*/
+			LostConnector lostConnector = LostConnector.getInstance();
+			lostConnector.setContext(getApplicationContext());
+			lostConnector.setLocation(location.getLatitude(), location.getLongitude());
+			if (lostConnector.requestSent() == false) {
+				lostConnector.getPSAPD();
+			}
 		}
 
 		@Override
@@ -199,6 +219,8 @@ public class NG911Activity extends Activity {
 		}
 		
 	};
+	
+	
 	@Override
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
@@ -264,7 +286,10 @@ public class NG911Activity extends Activity {
 			// TODO Auto-generated method stub
 			Log.e(TAG,"onTextChanged() new char sequence is "+s+" start="+start+" ,before= "+before+",count= "+count);
 			Log.e(TAG,"new charSequence is ="+s.subSequence(start,start+count));
-
+			
+			// RTT send
+			sipController.sendRTT(s.charAt(start));
+			
 			chatWindowTextView.setText(s);
 		}
 		
