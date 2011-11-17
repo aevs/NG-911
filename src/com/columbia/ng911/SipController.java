@@ -42,17 +42,17 @@ public class SipController implements SipProviderListener, TransactionClientList
         private int defaultIncomingPort = 7070; /* for testing */
         
         SipController(String serverID, String ipAddress, String port) {
-                /* SipStack.log_path = "/data/data/com.columbia.ng911/files/"; */
-                SipStack.debug_level = 0;
+                SipStack.log_path = "/data/misc/tmp/";
+                SipStack.debug_level = 7;
 
                 this.serverID = serverID;
                 this.serverIpAddress = ipAddress;
                 this.serverPort = port;
 
                 //this.localIpAddress = this.getLocalIpAddress(); // for real device!
-                this.localIpAddress = "127.0.0.1";
+                this.localIpAddress = "10.211.55.3";
 
-                sip = new SipProvider(ipAddress, defaultIncomingPort);
+                sip = new SipProvider(this.serverIpAddress, defaultIncomingPort);
                 sip.addSipProviderListener(SipProvider.ANY, this);
 
                 System.out.println("Local Sip Addr = "+ localIpAddress + ":" + sip.getPort());
