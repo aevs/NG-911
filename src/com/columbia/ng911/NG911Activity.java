@@ -1,18 +1,11 @@
 package com.columbia.ng911;
 
-import com.columbia.ng911.*;
-
-import java.util.List;
-
-import org.zoolu.sip.address.NameAddress;
-import org.zoolu.sip.address.SipURL;
-import org.zoolu.sip.message.Message;
-import org.zoolu.sip.message.MessageFactory;
-import org.zoolu.sip.provider.SipProvider;
-import org.zoolu.sip.provider.SipStack;
-
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -20,6 +13,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -29,8 +23,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
-import android.view.inputmethod.InputMethodInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -40,161 +32,179 @@ import android.widget.Toast;
 public class NG911Activity extends Activity {
 	/* For SIP */
 	private SipController sipController;
-	
-	private static String TAG=NG911Activity.class.getName();
-	
+
+	private static String TAG = NG911Activity.class.getName();
+
 	private static TextView chatWindowTextView;
-	
-	private static final int PHOTO_RESULT=4433;
-	
-    /** Called when the activity is first created. */
+
+	private static final int PHOTO_RESULT = 4433;
+
+	/** Called when the activity is first created. */
 	LocationManager locationManager;
 	ConnectivityManager connectivityManager;
 	Location location;
+
 	@Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-        
-        chatWindowTextView=(TextView)findViewById(R.id.chatWindow);
-        
-        /*************************
-         * Check for network connection
-         * 
-         * move to onStart()
-         *************************/
-        connectivityManager=(ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
-        if(networkInfo.isAvailable()){
-        	Toast.makeText(getApplicationContext(),"network is available",Toast.LENGTH_SHORT).show();
-        }
-        if(networkInfo.isConnected()){
-        	Toast.makeText(getApplicationContext(),"network is connected",Toast.LENGTH_SHORT).show();
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
 
-        }
-        
-        /* 
-        InputMethodManager ims= (InputMethodManager)this.getSystemService(INPUT_METHOD_SERVICE);
-        ims.showInputMethodPicker();
-        List<InputMethodInfo> methodList=ims.getInputMethodList();
-//        int imeOption=sendMessageEditText.getImeOptions();
+		chatWindowTextView = (TextView) findViewById(R.id.chatWindow);
 
-        //IBinder token=sendMessageEditText.getInputType();
-        */
-        
-        /**************************
-         * Check for location via GPS or network provider
-         * Move to onStart()
-         **************************/
-        locationManager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        boolean isGPSEnabled=locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if(isGPSEnabled){
-        	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
-        	
-        }else{
-        	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
-        }
-        
-        
-        
-        /*******************************************
-         * 
-         * Camera button
-         * 
-         *******************************************/
-        Button cameraButton=(Button)findViewById(R.id.sendPhotoButton);
-        cameraButton.setOnClickListener(cameraButtonOnClickListener);
-        
+		connectivityManager = (ConnectivityManager) this
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		alertIfNoNetwork();
+		
+		/*******************************************
+		 * 
+		 * Camera button
+		 * 
+		 *******************************************/
+		Button cameraButton = (Button) findViewById(R.id.sendPhotoButton);
+		cameraButton.setOnClickListener(cameraButtonOnClickListener);
 
-        /********************************
-         *  SipController Initialize
-         *******************************/
-        sipController = new SipController ("test", "128.237.250.232", "5060");
-        
-        Button callButton = (Button)findViewById(R.id.call);
-        callButton.setOnClickListener(new OnClickListener() {
-        	public void onClick(View v) {
-        		System.out.println("Outgoing call");
-        		sipController.call();
-        	}
-        });
-        
-        Button hangButton = (Button)findViewById(R.id.hang);
-        hangButton.setOnClickListener(new OnClickListener() {
-        	public void onClick(View v) {
-        		System.out.println("Hang up call");
-        		sipController.hangup();
-        	}
-        });
-    	
-        Button sendMessageButton = (Button)findViewById(R.id.sendMessageButton);
-        sendMessageButton.setOnClickListener(new OnClickListener() {
-    		public void onClick(View v) {
+		/********************************
+		 * SipController Initialize
+		 *******************************/
+		sipController = new SipController("test", "128.237.250.232", "5060");
 
-    			//Intent for starting preview..does not take photos yet.
-    			Intent intent=new Intent(getApplicationContext(), CameraCapture.class);
-    			startActivity(intent);
-    			
-    			if(v.getId() == R.id.sendMessageButton){
-    				TextView tv = (TextView)findViewById(R.id.message);
-    				String inputMessage = tv.getText().toString();
-    				
-//    				Message msg = MessageFactory.createMessageRequest(sip,
-//    						new NameAddress(new SipURL("test@10.211.55.3")),
-//    						new NameAddress(new SipURL("test@10.211.55.2")), 
-//    						inputMessage, "text/plain", inputMessage);
-//    				sip.sendMessage(msg);
-    			
-    				sipController.send(inputMessage);
-    				
-    			}
-    		}
-    	});
-    }
+		Button callButton = (Button) findViewById(R.id.call);
+		callButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				System.out.println("Outgoing call");
+				sipController.call();
+			}
+		});
+
+		Button hangButton = (Button) findViewById(R.id.hang);
+		hangButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				System.out.println("Hang up call");
+				sipController.hangup();
+			}
+		});
+
+		Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
+		sendMessageButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+
+				// Intent for starting preview..does not take photos yet.
+				Intent intent = new Intent(getApplicationContext(),
+						CameraCapture.class);
+				startActivity(intent);
+
+				if (v.getId() == R.id.sendMessageButton) {
+					TextView tv = (TextView) findViewById(R.id.message);
+					String inputMessage = tv.getText().toString();
+
+					// Message msg = MessageFactory.createMessageRequest(sip,
+					// new NameAddress(new SipURL("test@10.211.55.3")),
+					// new NameAddress(new SipURL("test@10.211.55.2")),
+					// inputMessage, "text/plain", inputMessage);
+					// sip.sendMessage(msg);
+
+					sipController.send(inputMessage);
+
+				}
+			}
+		});
+	}
+
+	private void alertIfNoNetwork() {
+		NetworkInfo[] networkInfoTrial = connectivityManager
+				.getAllNetworkInfo();
+		boolean isConnected = false;
+		for (int i = 0; i < networkInfoTrial.length; i++) {
+			if (networkInfoTrial[i].isConnected()) {
+				isConnected = true;
+			}
+		}
+		if (isConnected == false) {
+			Toast.makeText(getApplicationContext(), "network is not available",
+					Toast.LENGTH_LONG).show();
+			// AlertDialog connectedToNetwork=new
+			// AlertDialog(getBaseContext(),false,);
+
+			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+					NG911Activity.this);
+			alertDialogBuilder.setCancelable(true);
+			alertDialogBuilder.setTitle("No Network Connectivity");
+			alertDialogBuilder.setMessage("Exiting app, call 911?");
+
+			alertDialogBuilder.setPositiveButton("Call 911",
+					new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// TODO Auto-generated method stub
+							Intent callIntent = new Intent(Intent.ACTION_CALL);
+							callIntent.setData(Uri.parse("tel:" + 35354));
+							callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							startActivity(callIntent);
+							// finish();
+						}
+					});
+
+			alertDialogBuilder.setNegativeButton("Exit",
+					new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// TODO Auto-generated method stub
+							dialog.dismiss();
+							finish();
+						}
+					});
+			// AlertDialog.Builder
+			// alertDialogBuilder=initializeAlertDialog("No Network Connectivity",
+			// "Exiting app..Call 911?");
+			AlertDialog alert = alertDialogBuilder.create();
+			alert.show();
+		}
+	}
+
 	
-
-	
-    @Override
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
-		if(!data.getExtras().isEmpty()){
-			if(requestCode==PHOTO_RESULT){
-				
-				Bitmap photoResult=(Bitmap) data.getExtras().get("data");
-				ImageView imageView=new ImageView(this.getApplicationContext());
+		if (!data.getExtras().isEmpty()) {
+			if (requestCode == PHOTO_RESULT) {
+
+				Bitmap photoResult = (Bitmap) data.getExtras().get("data");
+				ImageView imageView = new ImageView(
+						this.getApplicationContext());
 				imageView.setImageBitmap(photoResult);
 				setContentView(imageView);
-				
+
 			}
 		}
 	}
 
+	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 
-
-	OnClickListener cameraButtonOnClickListener=new OnClickListener() {
-		
 		@Override
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
 
-			
-			Intent intent= new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-			startActivityForResult(intent,PHOTO_RESULT);
-			
+			Intent intent = new Intent(
+					android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+			startActivityForResult(intent, PHOTO_RESULT);
+
 		}
 	};
-	
-	LocationListener locationListener= new LocationListener(){
+
+	LocationListener locationListener = new LocationListener() {
 		@Override
 		public void onLocationChanged(Location location) {
 			/*
-			Toast.makeText(getApplicationContext(),"location is"+location.toString()
-					, Toast.LENGTH_LONG).show();
-			*/
+			 * Toast.makeText(getApplicationContext(),"location is"+location.
+			 * toString() , Toast.LENGTH_LONG).show();
+			 */
 			LostConnector lostConnector = LostConnector.getInstance();
 			lostConnector.setContext(getApplicationContext());
-			lostConnector.setLocation(location.getLatitude(), location.getLongitude());
+			lostConnector.setLocation(location.getLatitude(),
+					location.getLongitude());
 			if (lostConnector.requestSent() == false) {
 				lostConnector.getPSAPD();
 			}
@@ -203,24 +213,23 @@ public class NG911Activity extends Activity {
 		@Override
 		public void onProviderDisabled(String provider) {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void onProviderEnabled(String provider) {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void onStatusChanged(String provider, int status, Bundle extras) {
 			// TODO Auto-generated method stub
-			
+
 		}
-		
+
 	};
-	
-	
+
 	@Override
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
@@ -231,7 +240,7 @@ public class NG911Activity extends Activity {
 	protected void onPause() {
 		// TODO Auto-generated method stub
 		super.onPause();
-		locationManager.removeUpdates(locationListener);
+		// locationManager.removeUpdates(locationListener);
 	}
 
 	@Override
@@ -243,101 +252,132 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onStart() {
 		// TODO Auto-generated method stub
-		Log.e(TAG,"onStart()");
-		sendMessageEditText=(EditText)findViewById(R.id.message);
-	
+		Log.e(TAG, "onStart()");
+		sendMessageEditText = (EditText) findViewById(R.id.message);
 		sendMessageEditText.setOnKeyListener(rttTextListener);
 		sendMessageEditText.addTextChangedListener(rttTextWatcher);
-		//		InputMethodManager iMM=(InputMethodManager)this.getSystemService(Service.INPUT_METHOD_SERVICE);
-//		iMM.showSoftInput(getCurrentFocus(),0 );
+
+		try {
+			alertIfNoNetwork();
+			/**************************
+			 * 
+			 * Check for location via GPS or network provider
+			 * 
+			 **************************/
+			locationManager = (LocationManager) this
+					.getSystemService(Context.LOCATION_SERVICE);
+			boolean isGPSEnabled = locationManager
+					.isProviderEnabled(LocationManager.GPS_PROVIDER);
+			if (isGPSEnabled) {
+				locationManager
+						.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+								1000, 0, locationListener);
+
+			} else {
+				locationManager.requestLocationUpdates(
+						LocationManager.NETWORK_PROVIDER, 1000, 0,
+						locationListener);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// InputMethodManager
+		// iMM=(InputMethodManager)this.getSystemService(Service.INPUT_METHOD_SERVICE);
+		// iMM.showSoftInput(getCurrentFocus(),0 );
 		super.onStart();
 	}
+
 	EditText sendMessageEditText;
-	
-	
-	
-	
-	OnKeyListener rttTextListener= new OnKeyListener() {
-		
+
+	OnKeyListener rttTextListener = new OnKeyListener() {
+
 		@Override
 		public boolean onKey(View v, int keyCode, KeyEvent event) {
 			// TODO Auto-generated method stub
-			Log.e(TAG,"onKey() of rttTextListener called");
-//			if(event.getAction()==KeyEvent.ACTION_DOWN){
-				if(keyCode==KeyEvent.KEYCODE_0){
-					Log.e(TAG,"caught 0");
-				}
+			Log.e(TAG, "onKey() of rttTextListener called");
+			// if(event.getAction()==KeyEvent.ACTION_DOWN){
+			if (keyCode == KeyEvent.KEYCODE_0) {
+				Log.e(TAG, "caught 0");
+			}
 
-				char keyLabel=event.getDisplayLabel();
-				String keyLabelString=String.valueOf(keyLabel);
-				Log.e(TAG,"onKey() event keyLabel= "+keyLabelString+" keyCode= "
-						+event.getKeyCode()+" Unicode= "+event.getUnicodeChar());
-//				Toast.makeText(getApplicationContext(),keyLabel , 1000).show();
-//			}
+			char keyLabel = event.getDisplayLabel();
+			String keyLabelString = String.valueOf(keyLabel);
+			Log.e(TAG,
+					"onKey() event keyLabel= " + keyLabelString + " keyCode= "
+							+ event.getKeyCode() + " Unicode= "
+							+ event.getUnicodeChar());
+			// Toast.makeText(getApplicationContext(),keyLabel , 1000).show();
+			// }
 			return false;
 		}
-		
-		
+
 	};
-	TextWatcher rttTextWatcher=new TextWatcher() {
-		
+	TextWatcher rttTextWatcher = new TextWatcher() {
+
 		@Override
-		public void onTextChanged(CharSequence s, int start, int before, int count) {
+		public void onTextChanged(CharSequence s, int start, int before,
+				int count) {
 			// TODO Auto-generated method stub
-			Log.e(TAG,"onTextChanged() new char sequence is "+s+" start="+start+" ,before= "+before+",count= "+count);
-			Log.e(TAG,"new charSequence is ="+s.subSequence(start,start+count));
-			
+			Log.e(TAG, "onTextChanged() new char sequence is " + s + " start="
+					+ start + " ,before= " + before + ",count= " + count);
+			Log.e(TAG,
+					"new charSequence is ="
+							+ s.subSequence(start, start + count));
+
 			// RTT send
 			sipController.sendRTT(s.charAt(start));
-			
+
 			chatWindowTextView.setText(s);
 		}
-		
+
 		@Override
 		public void beforeTextChanged(CharSequence s, int start, int count,
 				int after) {
 			// TODO Auto-generated method stub
-			
+
 		}
-		
+
 		@Override
 		public void afterTextChanged(Editable s) {
 			// TODO Auto-generated method stub
-			Log.e(TAG,"afterTextChanged "+s.toString());
+			Log.e(TAG, "afterTextChanged " + s.toString());
 		}
 	};
-	
-	KeyListener l=new KeyListener() {
-		
+
+	KeyListener l = new KeyListener() {
+
 		@Override
-		public boolean onKeyUp(View view, Editable text, int keyCode, KeyEvent event) {
+		public boolean onKeyUp(View view, Editable text, int keyCode,
+				KeyEvent event) {
 			// TODO Auto-generated method stub
 			return false;
 		}
-		
+
 		@Override
 		public boolean onKeyOther(View view, Editable text, KeyEvent event) {
 			// TODO Auto-generated method stub
 			return false;
 		}
-		
+
 		@Override
 		public boolean onKeyDown(View view, Editable text, int keyCode,
 				KeyEvent event) {
 			// TODO Auto-generated method stub
 			return false;
 		}
-		
+
 		@Override
 		public int getInputType() {
 			// TODO Auto-generated method stub
 			return 0;
 		}
-		
+
 		@Override
 		public void clearMetaKeyState(View view, Editable content, int states) {
 			// TODO Auto-generated method stub
-			
+
 		}
 	};
 
@@ -345,5 +385,7 @@ public class NG911Activity extends Activity {
 	protected void onStop() {
 		// TODO Auto-generated method stub
 		super.onStop();
+
+		locationManager.removeUpdates(locationListener);
 	}
 }
