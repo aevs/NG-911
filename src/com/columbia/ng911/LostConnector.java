@@ -9,10 +9,15 @@
 
 package com.columbia.ng911;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
-import org.apache.http.HttpEntity;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -20,11 +25,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 public class LostConnector {
 	private static LostConnector lostConnector = new LostConnector(0, 0);
@@ -86,8 +89,27 @@ public class LostConnector {
 			se = new StringEntity(this.makeLoSTRequest(), HTTP.UTF_8);
 			post.setEntity(se);
 			
-			response = client.execute(post);
 			
+			
+			response = client.execute(post);
+			InputStream is=response.getEntity().getContent();
+			InputStreamReader isr=new InputStreamReader(is);
+			BufferedReader br=new BufferedReader(isr);
+			
+			StringBuilder sb=new StringBuilder();
+			
+			String read= br.readLine();
+			int i=0;
+			while(read!=null){
+				read=br.readLine();
+				sb.append(read);
+			}
+			
+			String trial=sb.toString();
+			int urlStartIndex=trial.indexOf("<uri>");
+			int urlEndIndex=trial.indexOf("</uri>");
+			String serverIp=trial.substring(urlStartIndex+4, urlEndIndex);
+			Log.e("LostConnector","*********** "+trial+"***********");
 			//Toast.makeText(appContext, EntityUtils.toString(response.getEntity()), 
 			//		Toast.LENGTH_LONG).show();
 			//this.requestSent = true;

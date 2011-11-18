@@ -1,5 +1,13 @@
 package com.columbia.ng911;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import org.zoolu.sip.provider.SipStack;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -8,9 +16,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -32,12 +42,14 @@ import android.widget.Toast;
 public class NG911Activity extends Activity {
 	/* For SIP */
 	private SipController sipController;
-
+	private static mysip sip ;
 	private static String TAG = NG911Activity.class.getName();
 
 	private static TextView chatWindowTextView;
 
 	private static final int PHOTO_RESULT = 4433;
+	
+	public static final int IMAGE_RECEIVED_RESULT=39485439;
 
 	/** Called when the activity is first created. */
 	LocationManager locationManager;
@@ -48,7 +60,8 @@ public class NG911Activity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-
+		SipStack.debug_level=0;
+		sip = new mysip("192.168.2.5",this);
 		chatWindowTextView = (TextView) findViewById(R.id.chatWindow);
 
 		connectivityManager = (ConnectivityManager) this
@@ -89,10 +102,8 @@ public class NG911Activity extends Activity {
 			public void onClick(View v) {
 
 				// Intent for starting preview..does not take photos yet.
-				Intent intent = new Intent(getApplicationContext(),
-						CameraCapture.class);
-				startActivity(intent);
 
+				
 				if (v.getId() == R.id.sendMessageButton) {
 					TextView tv = (TextView) findViewById(R.id.message);
 					String inputMessage = tv.getText().toString();
@@ -103,8 +114,15 @@ public class NG911Activity extends Activity {
 					// inputMessage, "text/plain", inputMessage);
 					// sip.sendMessage(msg);
 
-					sipController.send(inputMessage);
+					//sipController.send(inputMessage);
+					sip.send(inputMessage);
+					chatWindowTextView.append("\n User: "+inputMessage);
+//					tv.setText("");
 
+					Intent intent = new Intent(getBaseContext(),
+							CameraCapture.class);
+					startActivityForResult(intent,IMAGE_RECEIVED_RESULT);
+//				startActivity(intent);
 				}
 			}
 		});
@@ -178,6 +196,44 @@ public class NG911Activity extends Activity {
 				setContentView(imageView);
 
 			}
+			if(requestCode==IMAGE_RECEIVED_RESULT){
+//				byte[] jpegByteArray=(byte[]) data.getExtras().get(CameraCapture.JPEG_STRING);
+				Uri uri=(Uri) data.getExtras().get(CameraCapture.JPEG_STRING);
+				try {
+					InputStream is=getContentResolver().openInputStream(uri);
+					InputStreamReader isr=new InputStreamReader(is);
+					BufferedReader br=new BufferedReader(isr);
+					
+					StringBuilder sb=new StringBuilder();
+					
+					String read= br.readLine();
+					int i=0;
+					while(read!=null){
+						read=br.readLine();
+						sb.append(read);
+						//sip.send(read);	
+					}
+					String jpegString=sb.toString();
+					sip.send(jpegString);
+					Log.e(TAG,"jpegString is: "+jpegString);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				Log.e(TAG,"Received image result from cameraCapture class");
+				
+//				Bitmap pictureTaken = BitmapFactory.decodeByteArray(jpegByteArray, 0,
+//				jpegByteArray.length);
+//				Log.e(TAG+ "onpictureTaken()","bitmap is: "+pictureTaken.toString());
+//				ImageView imageView = new ImageView(getApplicationContext());
+//				imageView.setImageBitmap(pictureTaken);
+//				setContentView(imageView);
+				
+				
+			}
 		}
 	}
 
@@ -194,6 +250,7 @@ public class NG911Activity extends Activity {
 		}
 	};
 
+	static boolean flagLostSent=false;
 	LocationListener locationListener = new LocationListener() {
 		@Override
 		public void onLocationChanged(Location location) {
@@ -201,13 +258,16 @@ public class NG911Activity extends Activity {
 			 * Toast.makeText(getApplicationContext(),"location is"+location.
 			 * toString() , Toast.LENGTH_LONG).show();
 			 */
-			LostConnector lostConnector = LostConnector.getInstance();
-			lostConnector.setContext(getApplicationContext());
-			lostConnector.setLocation(location.getLatitude(),
-					location.getLongitude());
-			if (lostConnector.requestSent() == false) {
-				lostConnector.getPSAPD();
-			}
+//			if(!flagLostSent){
+				LostConnector lostConnector = LostConnector.getInstance();
+				lostConnector.setContext(getApplicationContext());
+				lostConnector.setLocation(location.getLatitude(),
+						location.getLongitude());
+				if (lostConnector.requestSent() == false) {
+					lostConnector.getPSAPD();
+				}
+				flagLostSent=true;
+//			}
 		}
 
 		@Override
@@ -327,7 +387,7 @@ public class NG911Activity extends Activity {
 							+ s.subSequence(start, start + count));
 
 			// RTT send
-			sipController.sendRTT(s.charAt(start));
+//			sipController.sendRTT(s.charAt(start));
 
 			chatWindowTextView.setText(s);
 		}
@@ -346,40 +406,7 @@ public class NG911Activity extends Activity {
 		}
 	};
 
-	KeyListener l = new KeyListener() {
-
-		@Override
-		public boolean onKeyUp(View view, Editable text, int keyCode,
-				KeyEvent event) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public boolean onKeyOther(View view, Editable text, KeyEvent event) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public boolean onKeyDown(View view, Editable text, int keyCode,
-				KeyEvent event) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public int getInputType() {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		@Override
-		public void clearMetaKeyState(View view, Editable content, int states) {
-			// TODO Auto-generated method stub
-
-		}
-	};
+	
 
 	@Override
 	protected void onStop() {
