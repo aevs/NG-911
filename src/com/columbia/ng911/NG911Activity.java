@@ -181,6 +181,7 @@ public class NG911Activity extends Activity {
 		}
 	}
 
+
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
