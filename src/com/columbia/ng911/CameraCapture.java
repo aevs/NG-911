@@ -63,8 +63,6 @@ public class CameraCapture extends Activity {
 	}
 
 	OnClickListener takePictureClickListener = new OnClickListener() {
-
-		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
 
@@ -74,8 +72,6 @@ public class CameraCapture extends Activity {
 	};
 
 	ShutterCallback shutterCallback = new ShutterCallback() {
-
-		@Override
 		public void onShutter() {
 			// TODO Auto-generated method stub
 			Toast.makeText(getApplicationContext(),
@@ -84,8 +80,6 @@ public class CameraCapture extends Activity {
 		}
 	};
 	PictureCallback rawCallback = new PictureCallback() {
-
-		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
 
@@ -96,8 +90,6 @@ public class CameraCapture extends Activity {
 	};
 
 	PictureCallback jpegCallback = new PictureCallback() {
-
-		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
 

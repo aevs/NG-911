@@ -34,15 +34,18 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class NG911Activity extends Activity {
 	/* For SIP */
 	private SipController sipController;
-	private static mysip sip ;
+	//private static mysip sip ;
 	private static String TAG = NG911Activity.class.getName();
 
 	private static TextView chatWindowTextView;
@@ -61,13 +64,28 @@ public class NG911Activity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		SipStack.debug_level=0;
-		sip = new mysip("192.168.2.5",this);
+		//sip = new mysip("192.168.2.5",this);
 		chatWindowTextView = (TextView) findViewById(R.id.chatWindow);
 
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		alertIfNoNetwork();
 		
+		/*******************************************
+		 * Real Time Text or Normal Radio Button
+		 *******************************************/
+		RadioButton textTypeButton = (RadioButton)findViewById(R.id.RTP);
+		textTypeButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
+				if (arg1)
+					Log.e("RTT_BUTTON", "yes");
+				else
+					Log.e("RTT_BUTTON", "no");
+				sipController.setIsRealTime(arg1);
+			}
+		});
+
+
 		/*******************************************
 		 * 
 		 * Camera button
@@ -79,7 +97,7 @@ public class NG911Activity extends Activity {
 		/********************************
 		 * SipController Initialize
 		 *******************************/
-		sipController = new SipController("test", "128.237.250.232", "5060");
+		sipController = new SipController("test", "192.168.25.8", "5060");
 
 		Button callButton = (Button) findViewById(R.id.call);
 		callButton.setOnClickListener(new OnClickListener() {
@@ -103,29 +121,26 @@ public class NG911Activity extends Activity {
 
 				// Intent for starting preview..does not take photos yet.
 
-				
 				if (v.getId() == R.id.sendMessageButton) {
 					TextView tv = (TextView) findViewById(R.id.message);
 					String inputMessage = tv.getText().toString();
 
-					// Message msg = MessageFactory.createMessageRequest(sip,
-					// new NameAddress(new SipURL("test@10.211.55.3")),
-					// new NameAddress(new SipURL("test@10.211.55.2")),
-					// inputMessage, "text/plain", inputMessage);
-					// sip.sendMessage(msg);
-
-					//sipController.send(inputMessage);
-					sip.send(inputMessage);
+					sipController.send(inputMessage);
+					tv.setText("");
+					
 					chatWindowTextView.append("\n User: "+inputMessage);
-//					tv.setText("");
-
+					
 					Intent intent = new Intent(getBaseContext(),
 							CameraCapture.class);
 					startActivityForResult(intent,IMAGE_RECEIVED_RESULT);
-//				startActivity(intent);
 				}
 			}
 		});
+		
+		/* Jin : I moved these from onStart(), because onStart() called several times after closing camera */ 
+		sendMessageEditText = (EditText) findViewById(R.id.message);
+		sendMessageEditText.setOnKeyListener(rttTextListener);
+		sendMessageEditText.addTextChangedListener(rttTextWatcher);
 	}
 
 	private void alertIfNoNetwork() {
@@ -152,7 +167,6 @@ public class NG911Activity extends Activity {
 			alertDialogBuilder.setPositiveButton("Call 911",
 					new DialogInterface.OnClickListener() {
 
-						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							// TODO Auto-generated method stub
 							Intent callIntent = new Intent(Intent.ACTION_CALL);
@@ -166,7 +180,6 @@ public class NG911Activity extends Activity {
 			alertDialogBuilder.setNegativeButton("Exit",
 					new DialogInterface.OnClickListener() {
 
-						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							// TODO Auto-generated method stub
 							dialog.dismiss();
@@ -215,7 +228,9 @@ public class NG911Activity extends Activity {
 						//sip.send(read);	
 					}
 					String jpegString=sb.toString();
-					sip.send(jpegString);
+					
+					//sip.send(jpegString);
+					
 					Log.e(TAG,"jpegString is: "+jpegString);
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
@@ -239,8 +254,6 @@ public class NG911Activity extends Activity {
 	}
 
 	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
-
-		@Override
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
 
@@ -253,7 +266,6 @@ public class NG911Activity extends Activity {
 
 	static boolean flagLostSent=false;
 	LocationListener locationListener = new LocationListener() {
-		@Override
 		public void onLocationChanged(Location location) {
 			/*
 			 * Toast.makeText(getApplicationContext(),"location is"+location.
@@ -271,19 +283,16 @@ public class NG911Activity extends Activity {
 //			}
 		}
 
-		@Override
 		public void onProviderDisabled(String provider) {
 			// TODO Auto-generated method stub
 
 		}
 
-		@Override
 		public void onProviderEnabled(String provider) {
 			// TODO Auto-generated method stub
 
 		}
 
-		@Override
 		public void onStatusChanged(String provider, int status, Bundle extras) {
 			// TODO Auto-generated method stub
 
@@ -314,10 +323,7 @@ public class NG911Activity extends Activity {
 	protected void onStart() {
 		// TODO Auto-generated method stub
 		Log.e(TAG, "onStart()");
-		sendMessageEditText = (EditText) findViewById(R.id.message);
-		sendMessageEditText.setOnKeyListener(rttTextListener);
-		sendMessageEditText.addTextChangedListener(rttTextWatcher);
-
+		
 		try {
 			alertIfNoNetwork();
 			/**************************
@@ -353,12 +359,10 @@ public class NG911Activity extends Activity {
 	EditText sendMessageEditText;
 
 	OnKeyListener rttTextListener = new OnKeyListener() {
-
-		@Override
 		public boolean onKey(View v, int keyCode, KeyEvent event) {
 			// TODO Auto-generated method stub
 			Log.e(TAG, "onKey() of rttTextListener called");
-			// if(event.getAction()==KeyEvent.ACTION_DOWN){
+			
 			if (keyCode == KeyEvent.KEYCODE_0) {
 				Log.e(TAG, "caught 0");
 			}
@@ -369,15 +373,13 @@ public class NG911Activity extends Activity {
 					"onKey() event keyLabel= " + keyLabelString + " keyCode= "
 							+ event.getKeyCode() + " Unicode= "
 							+ event.getUnicodeChar());
-			// Toast.makeText(getApplicationContext(),keyLabel , 1000).show();
-			// }
+			if (keyCode == 67)
+				sipController.sendRTT((char) 0x08);
 			return false;
 		}
 
 	};
 	TextWatcher rttTextWatcher = new TextWatcher() {
-
-		@Override
 		public void onTextChanged(CharSequence s, int start, int before,
 				int count) {
 			// TODO Auto-generated method stub
@@ -388,19 +390,18 @@ public class NG911Activity extends Activity {
 							+ s.subSequence(start, start + count));
 
 			// RTT send
-//			sipController.sendRTT(s.charAt(start));
+			if (count > 0)
+				sipController.sendRTT(s.charAt(start));
 
 			chatWindowTextView.setText(s);
 		}
 
-		@Override
 		public void beforeTextChanged(CharSequence s, int start, int count,
 				int after) {
 			// TODO Auto-generated method stub
 
 		}
 
-		@Override
 		public void afterTextChanged(Editable s) {
 			// TODO Auto-generated method stub
 			Log.e(TAG, "afterTextChanged " + s.toString());

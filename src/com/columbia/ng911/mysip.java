@@ -100,18 +100,12 @@ public class mysip extends Activity implements SipProviderListener, TransactionC
 			
 		}
 
-
-
-		@Override
 		public void onTransProvisionalResponse(TransactionClient tc,
 				Message resp) {
 			// TODO Auto-generated method stub
 			
 		}
 
-
-
-		@Override
 		public void onTransSuccessResponse(TransactionClient tc, Message resp) {
 			// TODO Auto-generated method stub
 			System.out.println("Message Successfully delivered!");
@@ -123,17 +117,11 @@ public class mysip extends Activity implements SipProviderListener, TransactionC
 		      System.out.println("Details:"+recipient+subject+result);
 		}
 
-
-
-		@Override
 		public void onTransFailureResponse(TransactionClient tc, Message resp) {
 			// TODO Auto-generated method stub
 			
 		}
 
-
-
-		@Override
 		public void onTransTimeout(TransactionClient tc) {
 			// TODO Auto-generated method stub
 			

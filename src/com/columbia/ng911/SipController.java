@@ -38,8 +38,8 @@ public class SipController implements SipProviderListener, TransactionClientList
         private String serverPort;
 
         private String localIpAddress;
-        //private int defaultIncomingPort = 5060;
-        private int defaultIncomingPort = 7070; /* for testing */
+        private int defaultIncomingPort = 5060;
+        private boolean isRealTime = true;
         
         SipController(String serverID, String ipAddress, String port) {
                 SipStack.log_path = "/data/misc/tmp/";
@@ -49,16 +49,15 @@ public class SipController implements SipProviderListener, TransactionClientList
                 this.serverIpAddress = ipAddress;
                 this.serverPort = port;
 
-                //this.localIpAddress = this.getLocalIpAddress(); // for real device!
-                this.localIpAddress = "10.211.55.3";
+                this.localIpAddress = this.getLocalIpAddress(); // for real device!
 
-                sip = new SipProvider(this.serverIpAddress, defaultIncomingPort);
+                sip = new SipProvider(this.localIpAddress, defaultIncomingPort);
                 sip.addSipProviderListener(SipProvider.ANY, this);
 
-                System.out.println("Local Sip Addr = "+ localIpAddress + ":" + sip.getPort());
+                System.out.println("\n\n\nLocal Sip Addr = "+ localIpAddress + ":" + sip.getPort());
 
                 // UserAgent
-                ua = new UserAgent(sip, this.serverIpAddress, this.localIpAddress);
+                ua = new UserAgent(sip, this.localIpAddress, "Android");
                 ua.listen();
         }
         
@@ -69,27 +68,34 @@ public class SipController implements SipProviderListener, TransactionClientList
         public void hangup() {
         		ua.hangup();
         }
+        
+        public void setIsRealTime(boolean isRealTime) {
+        	this.isRealTime = isRealTime;
+        }
 
         public void send(String text) {
+        	if (isRealTime == false) {
                 Message msg = MessageFactory.createMessageRequest(sip,
-                                new NameAddress(new SipURL(serverID + "@" + serverIpAddress + ":" + serverPort)),
-                                new NameAddress(new SipURL("android@"+ localIpAddress + ":" + defaultIncomingPort)),
-                                text, "text/plain", text);
+                                new NameAddress(new SipURL("sip:"+ serverIpAddress)),
+                                new NameAddress(new SipURL("sip:"+ localIpAddress)),
+                                null, "text/plain", text + "\r\n");
                 sip.sendMessage(msg);
                 System.out.println("Sent");
+        	} else {
+        		ua.sendRTT('\n');
+        	}
         }
         
         public void sendRTT(char in) {
-        	ua.sendRTT(in);
+        	if (isRealTime == true)
+        		ua.sendRTT(in);
         }
 
-        @Override
         public void onTransProvisionalResponse(TransactionClient tc, Message resp) {
                 // TODO Auto-generated method stub
 
         }
 
-        @Override
         public void onTransSuccessResponse(TransactionClient tc, Message resp) {
                 // TODO Auto-generated method stub
                 System.out.println("Message Successfully delivered!");
@@ -101,19 +107,17 @@ public class SipController implements SipProviderListener, TransactionClientList
                 System.out.println("Details:"+recipient+subject+result);
         }
 
-        @Override
         public void onTransFailureResponse(TransactionClient tc, Message resp) {
                 // TODO Auto-generated method stub
 
         }
 
-        @Override
+        
         public void onTransTimeout(TransactionClient tc) {
                 // TODO Auto-generated method stub
 
         }
 
-        @Override
         public void onReceivedMessage(SipProvider sip_provider, Message message) {
                 // TODO Auto-generated method stub
                 System.out.println("Message Received!");
