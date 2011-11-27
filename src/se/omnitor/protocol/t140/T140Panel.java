@@ -1,7 +1,7 @@
 /* 
  * T140handler for NG9-1-1 project
  * 
- * © 2007 copyright by the Trustees of Columbia University in the City of New York. 
+ * ? 2007 copyright by the Trustees of Columbia University in the City of New York. 
  * 
  * Modified by Wonsang Song (wonsang@cs.columbia.edu)
  * Modified Date: 12/16/2007
@@ -103,7 +103,8 @@ public class T140Panel implements T140EventHandler {
     private void processNewLine() {
     	try {
 	    	System.out.println("Receiving [10]: LF");
-	    	out.write(call_id+" LF\n");
+	    	//out.write(call_id+" LF\n");
+	    	out.write("\n");
 	    	out.flush();
 	    	
 	    	// If newline is received, write all in the receive_buffer and flush it.
@@ -131,7 +132,8 @@ public class T140Panel implements T140EventHandler {
     private void processText(String inText) {
     	try {
 	    	System.out.println("Receiving [" + (int)inText.charAt(0) + "]: " + inText);
-	    	out.write(call_id+" "+inText+"\n");
+	    	//out.write(call_id+" "+inText+"\n");
+	    	out.write(inText);
 	    	out.flush();
 	    	
 	    	// If a character is received, put it in receive_buffer
@@ -144,7 +146,8 @@ public class T140Panel implements T140EventHandler {
     private void processBS() {
     	try {
 	    	System.out.println("Receiving [8]: BS");
-	    	out.write(call_id+" BS\n");
+	    	//out.write(call_id+" BS\n");
+	    	out.write(0x08);
 	    	out.flush();
 	    	
 	    	// If BS is received, delete the latest received in receive_buffer

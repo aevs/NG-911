@@ -25,6 +25,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.KeyListener;
@@ -45,6 +47,11 @@ import android.widget.Toast;
 public class NG911Activity extends Activity {
 	/* For SIP */
 	private SipController sipController;
+	private Handler t140Handler;
+	private T140Writer t140writer;
+	private StringBuffer t140IncomingBuffer = new StringBuffer("");
+	private CharSequence t140IncomingCharSeq = t140IncomingBuffer;
+	
 	//private static mysip sip ;
 	private static String TAG = NG911Activity.class.getName();
 
@@ -97,7 +104,17 @@ public class NG911Activity extends Activity {
 		/********************************
 		 * SipController Initialize
 		 *******************************/
-		sipController = new SipController("test", "192.168.25.8", "5060");
+		t140Handler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				char c = (char)msg.arg1;
+				t140IncomingBuffer.append(Character.toString(c));
+				chatWindowTextView.setText(t140IncomingCharSeq);
+				Log.e("T140", Integer.toString(msg.arg1));
+			}
+		};
+		t140writer = new T140Writer(t140Handler);
+		sipController = new SipController("test", "192.168.25.8", "5060", t140writer);
 
 		Button callButton = (Button) findViewById(R.id.call);
 		callButton.setOnClickListener(new OnClickListener() {

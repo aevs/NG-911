@@ -28,6 +28,7 @@ import org.zoolu.sip.transaction.TransactionClientListener;
 import org.zoolu.sip.transaction.TransactionServer;
 
 import android.util.Log;
+import android.widget.TextView;
 
 public class SipController implements SipProviderListener, TransactionClientListener {
         private SipProvider sip;
@@ -41,7 +42,7 @@ public class SipController implements SipProviderListener, TransactionClientList
         private int defaultIncomingPort = 5060;
         private boolean isRealTime = true;
         
-        SipController(String serverID, String ipAddress, String port) {
+        SipController(String serverID, String ipAddress, String port, T140Writer writer) {
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 7;
 
@@ -57,7 +58,7 @@ public class SipController implements SipProviderListener, TransactionClientList
                 System.out.println("\n\n\nLocal Sip Addr = "+ localIpAddress + ":" + sip.getPort());
 
                 // UserAgent
-                ua = new UserAgent(sip, this.localIpAddress, "Android");
+                ua = new UserAgent(sip, this.localIpAddress, "Android", writer);
                 ua.listen();
         }
         

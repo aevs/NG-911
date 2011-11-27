@@ -26,6 +26,7 @@ import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sdp.AttributeField;
 
 import android.util.Log;
+import android.widget.TextView;
 
 public class UserAgent extends CallListenerAdapter {
 		private String serverIpAddress;
@@ -52,14 +53,14 @@ public class UserAgent extends CallListenerAdapter {
             Log.e("SIP:LOCAL_SDP", local_session);
         } 
 
-        public UserAgent (SipProvider sip_provider, String from_url, String contact_url) {
+        public UserAgent (SipProvider sip_provider, String from_url, String contact_url, T140Writer writer) {
                 this.sip_provider = sip_provider;
                 this.from_url = from_url;
                 this.contact_url = contact_url;
                 this.initSessionDescriptor();
                 
-                appController = new AppController("temp_id", 
-                		new BufferedWriter(new OutputStreamWriter(System.out)), 
+                appController = new AppController("s", 
+                		new BufferedWriter(new OutputStreamWriter(writer)), 
                 		new BufferedWriter(new OutputStreamWriter(System.out)));
         }
 
