@@ -190,9 +190,10 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
            else contact_url=from_url;
 
            /* Original MJSIP Invite */
-           //Message invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
+           Message invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
            /* End of Original MJSIP Invite */
 
+           /*
            String localIpAddress = sip_provider.getViaAddress();
            String pidflo = "Content-Type: application/pidf+xml\r\n"
                    +"Content-ID: <Android@"+localIpAddress+">\r\n"
@@ -237,6 +238,7 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
            body = body + pidflo + "\r\n\r\n--boundary1--\r\n";
 
            invite.setBody("multipart/mixed; boundary=\"boundary1\"", body);
+           */
 
            // do invite
            invite(invite);
