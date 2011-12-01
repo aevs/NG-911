@@ -17,8 +17,11 @@ import java.util.Enumeration;
 
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.address.SipURL;
+import org.zoolu.sip.header.Header;
+import org.zoolu.sip.message.BaseMessageFactory;
 import org.zoolu.sip.message.Message;
 import org.zoolu.sip.message.MessageFactory;
+import org.zoolu.sip.message.SipMethods;
 import org.zoolu.sip.message.SipResponses;
 import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sip.provider.SipProviderListener;
@@ -30,11 +33,10 @@ import org.zoolu.sip.transaction.TransactionServer;
 import android.util.Log;
 import android.widget.TextView;
 
-public class SipController implements SipProviderListener, TransactionClientListener {
+public class SipController {
         private SipProvider sip;
         private UserAgent ua;
 
-        private String serverID;
         private String serverIpAddress;
         private String serverPort;
 
@@ -46,14 +48,14 @@ public class SipController implements SipProviderListener, TransactionClientList
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 7;
 
-                this.serverID = serverID;
+                //this.serverID = serverID;
                 this.serverIpAddress = ipAddress;
                 this.serverPort = port;
 
                 this.localIpAddress = this.getLocalIpAddress(); // for real device!
 
                 sip = new SipProvider(this.localIpAddress, defaultIncomingPort);
-                sip.addSipProviderListener(SipProvider.ANY, this);
+                //sip.addSipProviderListener(SipProvider.ANY, this); // Listener will be mysip class by Pranay
 
                 System.out.println("\n\n\nLocal Sip Addr = "+ localIpAddress + ":" + sip.getPort());
 
@@ -62,18 +64,23 @@ public class SipController implements SipProviderListener, TransactionClientList
                 ua.listen();
         }
         
+        public SipProvider getSharedSipProvider() {
+        	return sip;
+        }
+        
         public void call() {
-        		ua.call(this.serverIpAddress);
+        	ua.call(this.serverIpAddress, this.serverPort);
         }
         
         public void hangup() {
-        		ua.hangup();
+        	ua.hangup();
         }
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
         }
 
+        /* send SIP message will be done in mysip.java
         public void send(String text) {
         	if (isRealTime == false) {
                 Message msg = MessageFactory.createMessageRequest(sip,
@@ -86,43 +93,11 @@ public class SipController implements SipProviderListener, TransactionClientList
         		ua.sendRTT('\n');
         	}
         }
+        */
         
         public void sendRTT(char in) {
         	if (isRealTime == true)
         		ua.sendRTT(in);
-        }
-
-        public void onTransProvisionalResponse(TransactionClient tc, Message resp) {
-                // TODO Auto-generated method stub
-
-        }
-
-        public void onTransSuccessResponse(TransactionClient tc, Message resp) {
-                // TODO Auto-generated method stub
-                System.out.println("Message Successfully delivered!");
-                Message req=tc.getRequestMessage();
-                NameAddress recipient=req.getToHeader().getNameAddress();
-                String subject=null;
-                if (req.hasSubjectHeader()) subject=req.getSubjectHeader().getSubject();
-                String result = resp.getStatusLine().getReason();
-                System.out.println("Details:"+recipient+subject+result);
-        }
-
-        public void onTransFailureResponse(TransactionClient tc, Message resp) {
-                // TODO Auto-generated method stub
-
-        }
-
-        
-        public void onTransTimeout(TransactionClient tc) {
-                // TODO Auto-generated method stub
-
-        }
-
-        public void onReceivedMessage(SipProvider sip_provider, Message message) {
-                // TODO Auto-generated method stub
-                System.out.println("Message Received!");
-                System.out.println(message.getBody());
         }
 
         public String getLocalIpAddress() { 

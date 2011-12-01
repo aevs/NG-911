@@ -52,7 +52,7 @@ public class NG911Activity extends Activity {
 	private StringBuffer t140IncomingBuffer = new StringBuffer("");
 	private CharSequence t140IncomingCharSeq = t140IncomingBuffer;
 	
-	//private static mysip sip ;
+	private static mysip sip ;
 	private static String TAG = NG911Activity.class.getName();
 
 	private static TextView chatWindowTextView;
@@ -71,7 +71,7 @@ public class NG911Activity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		SipStack.debug_level=0;
-		//sip = new mysip("192.168.2.5",this);
+		
 		chatWindowTextView = (TextView) findViewById(R.id.chatWindow);
 
 		connectivityManager = (ConnectivityManager) this
@@ -114,8 +114,10 @@ public class NG911Activity extends Activity {
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
-		sipController = new SipController("test", "192.168.25.8", "5060", t140writer);
+		sipController = new SipController("test", "128.59.22.88", "5080", t140writer);
 
+		sip = new mysip(sipController.getSharedSipProvider(),this);
+		
 		Button callButton = (Button) findViewById(R.id.call);
 		callButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -142,7 +144,8 @@ public class NG911Activity extends Activity {
 					TextView tv = (TextView) findViewById(R.id.message);
 					String inputMessage = tv.getText().toString();
 
-					sipController.send(inputMessage);
+					//sipController.send(inputMessage);
+					sip.send(inputMessage);
 					tv.setText("");
 					
 					chatWindowTextView.append("\n User: "+inputMessage);
@@ -242,11 +245,11 @@ public class NG911Activity extends Activity {
 					while(read!=null){
 						read=br.readLine();
 						sb.append(read);
-						//sip.send(read);	
+						sip.send(read);	
 					}
 					String jpegString=sb.toString();
 					
-					//sip.send(jpegString);
+					sip.send(jpegString);
 					
 					Log.e(TAG,"jpegString is: "+jpegString);
 				} catch (FileNotFoundException e) {

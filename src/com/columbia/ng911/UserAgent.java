@@ -17,11 +17,14 @@ import org.zoolu.sdp.MediaDescriptor;
 import org.zoolu.sdp.MediaField;
 import org.zoolu.sdp.SessionDescriptor;
 import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
 import org.zoolu.sip.call.Call;
 import org.zoolu.sip.call.CallListenerAdapter;
 import org.zoolu.sip.call.ExtendedCall;
 import org.zoolu.sip.call.SdpTools;
+import org.zoolu.sip.header.Header;
 import org.zoolu.sip.message.Message;
+import org.zoolu.sip.message.MessageFactory;
 import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sdp.AttributeField;
 
@@ -63,23 +66,33 @@ public class UserAgent extends CallListenerAdapter {
                 		new BufferedWriter(new OutputStreamWriter(writer)), 
                 		new BufferedWriter(new OutputStreamWriter(System.out)));
         }
+        
+        public String getLocalSDP() {
+        	return local_session;
+        }
 
-        public boolean call(String target_url) {
-                call = new Call(sip_provider, from_url, contact_url, this);
+        public boolean call(String target_url, String port) {
+            call = new Call(sip_provider, from_url, contact_url, this);
+            if (port != "5060") {
+            	call.call(target_url+":"+port,local_session);
+            	Log.e("CALL", target_url+":"+port);
+            }
+            else {
+            	call.call(target_url,local_session);
+            	Log.e("CALL", target_url);
+            }
+            this.serverIpAddress = target_url;
 
-                call.call(target_url,local_session);
-                this.serverIpAddress = target_url;
-
-                return true;
+            return true;
         }
         
         public void hangup() {
-        		call.hangup();
-        		call.cancel();
-        		call.bye();
-        		call.listen();
+        	call.hangup();
+        	call.cancel();
+        	call.bye();
+        	call.listen();
         		
-        		appController.stop();
+        	appController.stop();
         }
         
         public void sendRTT(char in) {

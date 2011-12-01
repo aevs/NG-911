@@ -25,10 +25,12 @@ public class mysip extends Activity implements SipProviderListener, TransactionC
 	   SipProvider sip;
 	   NG911Activity NG911;
 	    String ip;
-	    public mysip(String add, NG911Activity ng911)
+	    //public mysip(String add, NG911Activity ng911)
+	    public mysip(SipProvider sip_provider, NG911Activity ng911)
 	    {	NG911 = ng911;
-	    	ip = add;
-	    	sip = new SipProvider(add,7070);
+	    	ip = "192.168.2.5";
+	    	//sip = new SipProvider(add,7070);
+	    	sip = sip_provider;
 	    	//sip.setDefaultTransport(SipProvider.PROTO_TCP);
 	    	//Log.e("SIP", sip.getDefaultTransport());
 	    	SipStack.debug_level = 0;
