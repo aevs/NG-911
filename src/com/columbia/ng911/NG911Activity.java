@@ -79,7 +79,7 @@ public class NG911Activity extends Activity {
 		/********************************
 		 * SipController Initialize
 		 *******************************/
-		sipController = new SipController("test", "128.237.250.232", "5060");
+//		sipController = new SipController("test", "128.237.250.232", "5060");
 
 		Button callButton = (Button) findViewById(R.id.call);
 		callButton.setOnClickListener(new OnClickListener() {
