@@ -17,17 +17,22 @@ import org.zoolu.sdp.MediaDescriptor;
 import org.zoolu.sdp.MediaField;
 import org.zoolu.sdp.SessionDescriptor;
 import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
 import org.zoolu.sip.call.Call;
 import org.zoolu.sip.call.CallListenerAdapter;
 import org.zoolu.sip.call.ExtendedCall;
 import org.zoolu.sip.call.SdpTools;
+import org.zoolu.sip.header.Header;
 import org.zoolu.sip.message.Message;
+import org.zoolu.sip.message.MessageFactory;
 import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sdp.AttributeField;
 
 import android.util.Log;
+import android.widget.TextView;
 
 public class UserAgent extends CallListenerAdapter {
+		private String serverIpAddress;
         protected SipProvider sip_provider;
         protected Call call;
         protected String from_url;
@@ -42,9 +47,8 @@ public class UserAgent extends CallListenerAdapter {
         
         private void initSessionDescriptor() { 
             SessionDescriptor sdp = new SessionDescriptor(
-                            this.contact_url,
-                            //this.sip_provider.getViaAddress());
-                            this.contact_url);
+                            this.from_url,
+                            this.from_url);
   
             local_session = sdp.toString();
             local_session += "m=text 7077 RTP/AVP 99 98\r\na=fmtp:99 98/98/98\r\na=rtpmap:99 red/1000\r\na=rtpmap:98 t140/1000\r\n";
@@ -52,32 +56,43 @@ public class UserAgent extends CallListenerAdapter {
             Log.e("SIP:LOCAL_SDP", local_session);
         } 
 
-        public UserAgent (SipProvider sip_provider, String from_url, String contact_url) {
+        public UserAgent (SipProvider sip_provider, String from_url, String contact_url, T140Writer writer) {
                 this.sip_provider = sip_provider;
                 this.from_url = from_url;
                 this.contact_url = contact_url;
                 this.initSessionDescriptor();
                 
-                appController = new AppController("temp_id", 
-                		new BufferedWriter(new OutputStreamWriter(System.out)), 
+                appController = new AppController("s", 
+                		new BufferedWriter(new OutputStreamWriter(writer)), 
                 		new BufferedWriter(new OutputStreamWriter(System.out)));
         }
+        
+        public String getLocalSDP() {
+        	return local_session;
+        }
 
-        public boolean call(String target_url) {
-                call = new Call(sip_provider, from_url, contact_url, this);
+        public boolean call(String target_url, String port) {
+            call = new Call(sip_provider, from_url, contact_url, this);
+            if (port != "5060") {
+            	call.call(target_url+":"+port,local_session);
+            	Log.e("CALL", target_url+":"+port);
+            }
+            else {
+            	call.call(target_url,local_session);
+            	Log.e("CALL", target_url);
+            }
+            this.serverIpAddress = target_url;
 
-                call.call(target_url);
-
-                return true;
+            return true;
         }
         
         public void hangup() {
-        		call.hangup();
-        		call.cancel();
-        		call.bye();
-        		call.listen();
+        	call.hangup();
+        	call.cancel();
+        	call.bye();
+        	call.listen();
         		
-        		appController.stop();
+        	appController.stop();
         }
         
         public void sendRTT(char in) {
@@ -115,7 +130,7 @@ public class UserAgent extends CallListenerAdapter {
                 Log.e("SIP:UA - remote text port = ", Integer.toString(t140_remote_port));
                 
                 //To Testing RTP Sesstion for RTT (Real Time Text)
-            	appController.start(this.contact_url, 7077, this.from_url, t140_remote_port, 1, 1, 1);
+            	appController.start(this.from_url, 7077, this.serverIpAddress, t140_remote_port, 1, 1, 1);
         }
 
         public boolean listen() {
@@ -150,16 +165,17 @@ public class UserAgent extends CallListenerAdapter {
         }
         
         public void onCallAccepted(Call call, String sdp, Message resp) {
+        	Log.e("SIP:Outgoing", "Call Accepted");
         	//SessionDescriptor remote_sdp = new SessionDescriptor(sdp);
 	        //MediaDescriptor remote_m = remote_sdp.getMediaDescriptor("text");
 	        //Log.e("SIP:UA - md - ", remote_m.toString());
             //MediaField remote_m_field = remote_m.getMedia();
-        	Log.e("SIP:UA-SA as String - ", sdp);
+        	Log.e("RTT", sdp);
         	
             t140_remote_port = findTextPortonSDP(sdp);
         	
             //To Testing RTP Sesstion for RTT (Real Time Text)
-        	appController.start("10.211.55.3", 7077, this.from_url, t140_remote_port, 99, 98, 1);
+        	appController.start(this.from_url, 7077, this.serverIpAddress, t140_remote_port, 99, 98, 1);
         }
         
         private int findTextPortonSDP(String sdp) {

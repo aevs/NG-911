@@ -25,10 +25,12 @@ public class mysip extends Activity implements SipProviderListener, TransactionC
 	   SipProvider sip;
 	   NG911Activity NG911;
 	    String ip;
-	    public mysip(String add, NG911Activity ng911)
+	    //public mysip(String add, NG911Activity ng911)
+	    public mysip(SipProvider sip_provider, NG911Activity ng911)
 	    {	NG911 = ng911;
-	    	ip = add;
-	    	sip = new SipProvider(add,7070);
+	    	ip = "192.168.2.5";
+	    	//sip = new SipProvider(add,7070);
+	    	sip = sip_provider;
 	    	//sip.setDefaultTransport(SipProvider.PROTO_TCP);
 	    	//Log.e("SIP", sip.getDefaultTransport());
 	    	SipStack.debug_level = 0;
@@ -100,18 +102,12 @@ public class mysip extends Activity implements SipProviderListener, TransactionC
 			
 		}
 
-
-
-		@Override
 		public void onTransProvisionalResponse(TransactionClient tc,
 				Message resp) {
 			// TODO Auto-generated method stub
 			
 		}
 
-
-
-		@Override
 		public void onTransSuccessResponse(TransactionClient tc, Message resp) {
 			// TODO Auto-generated method stub
 			System.out.println("Message Successfully delivered!");
@@ -123,17 +119,11 @@ public class mysip extends Activity implements SipProviderListener, TransactionC
 		      System.out.println("Details:"+recipient+subject+result);
 		}
 
-
-
-		@Override
 		public void onTransFailureResponse(TransactionClient tc, Message resp) {
 			// TODO Auto-generated method stub
 			
 		}
 
-
-
-		@Override
 		public void onTransTimeout(TransactionClient tc) {
 			// TODO Auto-generated method stub
 			

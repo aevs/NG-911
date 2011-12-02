@@ -27,16 +27,19 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 public class CameraCapture extends Activity {
 
 	protected static final String JPEG_STRING = "jpegString";
-	private static String TAG="CameraCapture";
+	private static String TAG = "CameraCapture";
 	private Preview mPreview;
 	Camera mCamera;
+	private RelativeLayout mRelativeLayout;
 
 	private ImageButton takePictureButton = null;
 
@@ -47,24 +50,28 @@ public class CameraCapture extends Activity {
 
 		mCamera = Camera.open();
 		mPreview = new Preview(this, mCamera);
-		setContentView(mPreview);
+		mRelativeLayout = new RelativeLayout(this);
+		mRelativeLayout.addView(mPreview, new RelativeLayout.LayoutParams(
+				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+
+		 setContentView(mRelativeLayout);
 
 		// "take picture" button on camera preview surface
 		takePictureButton = new ImageButton(getApplicationContext());
+		takePictureButton.setImageResource(android.R.drawable.ic_menu_camera);
 		RelativeLayout.LayoutParams imageButtonParams = new RelativeLayout.LayoutParams(
 				RelativeLayout.LayoutParams.WRAP_CONTENT,
 				RelativeLayout.LayoutParams.WRAP_CONTENT);
-		imageButtonParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT,
-				RelativeLayout.TRUE);
+		imageButtonParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+		imageButtonParams.addRule(RelativeLayout.CENTER_VERTICAL);
+		
 
-		addContentView(takePictureButton, imageButtonParams);
+		mRelativeLayout.addView(takePictureButton, imageButtonParams);
 		takePictureButton.setOnClickListener(takePictureClickListener);
 
 	}
 
 	OnClickListener takePictureClickListener = new OnClickListener() {
-
-		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
 
@@ -74,8 +81,6 @@ public class CameraCapture extends Activity {
 	};
 
 	ShutterCallback shutterCallback = new ShutterCallback() {
-
-		@Override
 		public void onShutter() {
 			// TODO Auto-generated method stub
 			Toast.makeText(getApplicationContext(),
@@ -84,43 +89,40 @@ public class CameraCapture extends Activity {
 		}
 	};
 	PictureCallback rawCallback = new PictureCallback() {
-
-		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
 
-//			Log.e(TAG+" onPictureTaken()", "Raw data is:------------- "
-//					+ data.length + " -----------");
-			
+			// Log.e(TAG+" onPictureTaken()", "Raw data is:------------- "
+			// + data.length + " -----------");
+
 		}
 	};
 
 	PictureCallback jpegCallback = new PictureCallback() {
-
-		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
 
-			String jpegString=new String(data);
-			Log.e(TAG+" onPictureTaken()", "Jpeg data is:********* "
+			String jpegString = new String(data);
+			Log.e(TAG + " onPictureTaken()", "Jpeg data is:********* "
 					+ jpegString + " ************");
 
 			// Display on screen..send to LoSt server
 			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
 					data.length);
-			
-			
-			ContentValues contentValues=new ContentValues();
+
+			ContentValues contentValues = new ContentValues();
 			contentValues.put(Images.Media.TITLE, "image");
-			
-			Uri uri=getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
+
+			Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
 					contentValues);
-			
+
 			OutputStream outputStream;
 			try {
 				outputStream = getContentResolver().openOutputStream(uri);
-				boolean compressed=pictureTaken.compress(Bitmap.CompressFormat.JPEG,20,outputStream);
-				Log.e(TAG,"picture successfully compressed at:"+uri+compressed);
+				boolean compressed = pictureTaken.compress(
+						Bitmap.CompressFormat.JPEG, 20, outputStream);
+				Log.e(TAG, "picture successfully compressed at:" + uri
+						+ compressed);
 				outputStream.close();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -129,25 +131,23 @@ public class CameraCapture extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			
-			
-//			Log.e(TAG+ "onpictureTaken()","bitmap is: "+pictureTaken.toString());
-//			ImageView imageView = new ImageView(getApplicationContext());
-//			imageView.setImageBitmap(pictureTaken);
-//			setContentView(imageView);
-			
-			Log.e(TAG,"jpeg data length "+data.length);
-			
-			Intent intent= new Intent();
+
+			// Log.e(TAG+
+			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
+			// ImageView imageView = new ImageView(getApplicationContext());
+			// imageView.setImageBitmap(pictureTaken);
+			// setContentView(imageView);
+
+			Log.e(TAG, "jpeg data length " + data.length);
+
+			Intent intent = new Intent();
 			intent.putExtra(CameraCapture.JPEG_STRING, uri);
 			setResult(NG911Activity.IMAGE_RECEIVED_RESULT, intent);
 			finish();
-			
+
 		}
 	};
 
-	
 	@Override
 	public void finish() {
 		// TODO Auto-generated method stub
