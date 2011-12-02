@@ -113,7 +113,7 @@ public class NG911Activity extends Activity {
 				char c = (char)msg.arg1;
 				String tmp = t140IncomingCharSeq.toString();
 				if (tmp.length() == 0)
-					t140IncomingBuffer.append(" Server: ");
+					t140IncomingBuffer.append("\n Server: ");
 				else
 					arrayAdapter.remove(tmp);
 								
