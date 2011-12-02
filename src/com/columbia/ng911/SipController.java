@@ -46,7 +46,7 @@ public class SipController {
         
         SipController(String serverID, String ipAddress, String port, T140Writer writer) {
                 SipStack.log_path = "/data/misc/tmp/";
-                SipStack.debug_level = -1;
+                SipStack.debug_level = 0;
 
                 //this.serverID = serverID;
                 this.serverIpAddress = ipAddress;
@@ -78,6 +78,10 @@ public class SipController {
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
+        }
+        
+        public boolean isRealTime() {
+        	return this.isRealTime;
         }
 
         /* send SIP message will be done in mysip.java

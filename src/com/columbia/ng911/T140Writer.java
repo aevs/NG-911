@@ -16,12 +16,12 @@ public class T140Writer extends OutputStream {
 	
 	@Override
 	public void write(int oneByte) throws IOException {
-		if (oneByte < 0) {
-			Log.e("T140-ERROR", "Receving T140 Error Occur");
-			return;
-		}
-		Message msg = new Message();
-	    msg.arg1 = oneByte;
-	    mHandler.sendMessage(msg);
+                if (oneByte < 0) {
+                        Log.e("T140-ERROR", "Receving T140 Error Occur");
+                        return;
+                }
+                Message msg = new Message();
+                msg.arg1 = oneByte;
+                mHandler.sendMessage(msg);
 	}
 }

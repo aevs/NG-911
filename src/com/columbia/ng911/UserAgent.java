@@ -9,7 +9,10 @@
 package com.columbia.ng911;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.DatagramSocket;
+import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -40,6 +43,7 @@ public class UserAgent extends CallListenerAdapter {
         
         private AppController appController;
         
+        protected int t140_local_port;
         protected int t140_remote_port;
 
         /** Local sdp */
@@ -51,15 +55,23 @@ public class UserAgent extends CallListenerAdapter {
                             this.from_url);
   
             local_session = sdp.toString();
-            local_session += "m=text 7077 RTP/AVP 99 98\r\na=fmtp:99 98/98/98\r\na=rtpmap:99 red/1000\r\na=rtpmap:98 t140/1000\r\n";
+            local_session += "m=text "
+            		+ Integer.toString(t140_local_port)
+            		+ " RTP/AVP 99 98\r\na=fmtp:99 98/98/98\r\na=rtpmap:99 red/1000\r\na=rtpmap:98 t140/1000\r\n";
             
             Log.e("SIP:LOCAL_SDP", local_session);
         } 
 
         public UserAgent (SipProvider sip_provider, String from_url, String contact_url, T140Writer writer) {
+        		Random rand = new Random();
                 this.sip_provider = sip_provider;
                 this.from_url = from_url;
                 this.contact_url = contact_url;
+                this.t140_local_port = rand.nextInt(50000) + 1024;
+                do {
+                	t140_local_port++;
+                } while (this.availablePort(t140_local_port) != true);
+                	
                 this.initSessionDescriptor();
                 
                 appController = new AppController("s", 
@@ -120,7 +132,7 @@ public class UserAgent extends CallListenerAdapter {
                 Vector<AttributeField> v = new Vector<AttributeField>();
                 v.add(a1); v.add(a2); v.add(a3);
                 
-                new_sdp.addMedia(new MediaField("text", 7077, 0, 
+                new_sdp.addMedia(new MediaField("text", t140_local_port, 0, 
                 		remote_m_field.getTransport(), remote_m_field.getFormats()), v);
                 
                 local_session = new_sdp.toString();
@@ -130,7 +142,7 @@ public class UserAgent extends CallListenerAdapter {
                 Log.e("SIP:UA - remote text port = ", Integer.toString(t140_remote_port));
                 
                 //To Testing RTP Sesstion for RTT (Real Time Text)
-            	appController.start(this.from_url, 7077, this.serverIpAddress, t140_remote_port, 1, 1, 1);
+            	appController.start(this.from_url, t140_local_port, this.serverIpAddress, t140_remote_port, 0, 1, 0);
         }
 
         public boolean listen() {
@@ -175,7 +187,8 @@ public class UserAgent extends CallListenerAdapter {
             t140_remote_port = findTextPortonSDP(sdp);
         	
             //To Testing RTP Sesstion for RTT (Real Time Text)
-        	appController.start(this.from_url, 7077, this.serverIpAddress, t140_remote_port, 99, 98, 1);
+            Log.e("SIP:RTT", "Local IP - " + this.from_url);
+        	appController.start(this.from_url, t140_local_port, this.serverIpAddress, t140_remote_port, 99, 98, 0);
         }
         
         private int findTextPortonSDP(String sdp) {
@@ -196,5 +209,25 @@ public class UserAgent extends CallListenerAdapter {
         		}
         	}
         	return port;
+        }
+        
+        public boolean availablePort(int port) {
+            if (port < 1025 || port > 65534) {
+                throw new IllegalArgumentException("Invalid start port: " + port);
+            }
+
+            DatagramSocket ds = null;
+            try {
+                ds = new DatagramSocket(port);
+                ds.setReuseAddress(true);
+                return true;
+            } catch (IOException e) {
+            } finally {
+                if (ds != null) {
+                    ds.close();
+                }
+            }
+
+            return false;
         }
 }

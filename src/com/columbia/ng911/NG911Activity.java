@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 
 import org.zoolu.sip.provider.SipStack;
 
+import se.omnitor.protocol.t140.T140Constants;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -159,7 +161,11 @@ public class NG911Activity extends Activity {
 					String inputMessage = tv.getText().toString();
 
 					//sipController.send(inputMessage);
-					sip.send(inputMessage);
+					
+					if (sipController.isRealTime())
+						sipController.sendRTT(T140Constants.CR_LF);
+					else
+						sip.send(inputMessage);
 					tv.setText("");
 					
 //					chatWindowTextView.append("\n User: "+inputMessage);
