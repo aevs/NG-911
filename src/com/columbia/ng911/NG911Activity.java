@@ -107,14 +107,24 @@ public class NG911Activity extends Activity {
 		/********************************
 		 * SipController Initialize
 		 *******************************/
-//		sipController = new SipController("test", "128.237.250.232", "5060");
 		t140Handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
 				char c = (char)msg.arg1;
+				String tmp = t140IncomingCharSeq.toString();
+				if (tmp.length() == 0)
+					t140IncomingBuffer.append(" Server: ");
+				else
+					arrayAdapter.remove(tmp);
+								
 				t140IncomingBuffer.append(Character.toString(c));
-				arrayAdapter.add((String)t140IncomingCharSeq);
-				Log.e("T140", Integer.toString(msg.arg1));
+				tmp = t140IncomingCharSeq.toString();
+				arrayAdapter.add(tmp);
+				
+				if ((int)msg.arg1 == 13) // \n case
+					t140IncomingBuffer.setLength(0);
+
+				Log.e("T140Incoming", Integer.toString(msg.arg1));
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
