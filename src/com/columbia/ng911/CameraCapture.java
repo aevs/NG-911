@@ -106,6 +106,7 @@ public class CameraCapture extends Activity {
 			Log.e(TAG + " onPictureTaken()", "Jpeg data is:********* "
 					+ jpegString + " ************");
 
+			
 			// Display on screen..send to LoSt server
 			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
 					data.length);

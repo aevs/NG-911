@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -28,6 +29,7 @@ import org.apache.http.protocol.HTTP;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import android.content.Context;
 import android.util.Log;
@@ -39,6 +41,7 @@ public class LostConnector {
 	private double geo_lat;
 	private double geo_lng;
 	private String addressLostServer = "http://ng911-lost1.cs.columbia.edu:8080/lost/LoSTServlet";
+	public static String NO_RESPONSE="No Response from LoST server";
 
 	public void setContext(Context appContext) {
 		this.appContext = appContext;
@@ -91,7 +94,11 @@ public class LostConnector {
 			post.setEntity(se);
 
 			response = client.execute(post);
+			if(response==null){
+				return NO_RESPONSE;
+			}
 			InputStream is = response.getEntity().getContent();
+			
 			InputStreamReader isr = new InputStreamReader(is);
 			BufferedReader br = new BufferedReader(isr);
 
@@ -110,52 +117,51 @@ public class LostConnector {
 			Log.e("LostConnector", "*********** " + serverIp + "***********");
 			return serverIp;
 			
-//			try {
-//			
-//			/*****
-//			 * 
-//			 * Using Dom
-//			 * 
-//			 *****/
+			
+			/*****
+			 * 
+			 * Using Dom
+			 * 
+			 *****/
 //				DocumentBuilderFactory factory = DocumentBuilderFactory
 //						.newInstance();
 //				factory.setNamespaceAware(true);
 //				DocumentBuilder builder = factory.newDocumentBuilder();
 //				Document doc = builder.parse(is);
+//				doc.getDocumentElement().normalize();
 //
 //				NodeList nodeList=doc.getElementsByTagName("uri");
 //				Node node=nodeList.item(0);
 //				Log.e("Node Name:",""+node.getNodeName());
 //				Log.e("Node Value:",""+node.getNodeValue());
 //				
-//				
-////				Log.e("LostConnector: Xml Parser","uri:"+uri);
-//				/*************
-//				 * Using xPath
-//				 * 
-//				 */
-//				
-////				XPathFactory xPFactory = XPathFactory.newInstance();
-////				XPath xPath = xPFactory.newXPath();
-////				XPathExpression expr = xPath.compile("/findServiceResponse/uri");
-////
-////				Object output = expr.evaluate(doc, XPathConstants.NODESET);
-////				NodeList nodes = (NodeList) output;
-////				for (int j = 0; j < nodes.getLength(); j++) {
-////					Log.e("Xpath", "xPath uri is: " + nodes.item(j).getNodeValue());
-////				}
-//			} catch (Exception e) {
-//				// TODO: handle exception
-//				Log.e("exception",e.toString());
-//			}
+//				NodeList nodeList1=doc.getElementsByTagName("serviceBoundary");
+//				Node node1=nodeList1.item(0);
+//				Log.e("Node Name:",""+node1.getNodeName());
+//				Log.e("Node Value:",""+node1.getNodeValue());
+//
+//				NodeList nodeList2=doc.getElementsByTagName("locationValidation");
+//				Node node2=nodeList2.item(0);
+//				Log.e("Node Name:",""+node2.getNodeName());
+//				Log.e("Node Value:",""+node2.getNodeValue());
+				
+				
+//				Log.e("LostConnector: Xml Parser","uri:"+uri);
+				/*************
+				 * Using xPath
+				 * 
+				 */
+				
+//				XPathFactory xPFactory = XPathFactory.newInstance();
+//				XPath xPath = xPFactory.newXPath();
+//				XPathExpression expr = xPath.compile("/findServiceResponse/uri");
+//
+//				Object output = expr.evaluate(doc, XPathConstants.NODESET);
+//				NodeList nodes = (NodeList) output;
+//				for (int j = 0; j < nodes.getLength(); j++) {
+//					Log.e("Xpath", "xPath uri is: " + nodes.item(j).getNodeValue());
+//				}
 			
-			/*************/
-			
-			
-			// Toast.makeText(appContext,
-			// EntityUtils.toString(response.getEntity()),
-			// Toast.LENGTH_LONG).show();
-			// this.requestSent = true;
 
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -164,6 +170,9 @@ public class LostConnector {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

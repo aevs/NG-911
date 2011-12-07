@@ -8,13 +8,18 @@ import java.io.InputStreamReader;
 
 import org.zoolu.sip.provider.SipStack;
 
+
 import se.omnitor.protocol.t140.T140Constants;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
@@ -25,10 +30,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
+import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
@@ -50,16 +58,18 @@ public class NG911Activity extends Activity {
 	private T140Writer t140writer;
 	private StringBuffer t140IncomingBuffer = new StringBuffer("");
 	private CharSequence t140IncomingCharSeq = t140IncomingBuffer;
-	
-	private static mysip sip ;
+
+	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
 
-
+	private static final String USER_NAME = "userName";
+	private static final String USER_PHONE = "userPhone";
+	private static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
-	
-	public static final int IMAGE_RECEIVED_RESULT=39485439;
-	
-	private ArrayAdapter<String> arrayAdapter; 
+
+	public static final int IMAGE_RECEIVED_RESULT = 39485439;
+
+	private ArrayAdapter<String> arrayAdapter;
 	private ListView chatWindowListView;
 
 	/** Called when the activity is first created. */
@@ -71,33 +81,47 @@ public class NG911Activity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		SipStack.debug_level=0;
-		
+		SipStack.debug_level = 0;
 
+		
+		/**********************
+		 * 
+		 * Request for user data only the first time
+		 * 
+		 ************************/
+		SharedPreferences sharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(getApplicationContext());
+		if(!sharedPreferences.getBoolean(USER_DATA_SAVED, false)){
+			showAlertDialogForUserData();
+		}
+
+		
+		
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		alertIfNoNetwork();
-		
+
 		/*******************************************
 		 * Real Time Text or Normal Radio Button
 		 *******************************************/
-		RadioButton textTypeButton = (RadioButton)findViewById(R.id.RTP);
-		textTypeButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
-				if (arg1)
-					Log.e("RTT_BUTTON", "yes");
-				else
-					Log.e("RTT_BUTTON", "no");
-				sipController.setIsRealTime(arg1);
-			}
-		});
+		RadioButton textTypeButton = (RadioButton) findViewById(R.id.RTP);
+		textTypeButton
+				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+					public void onCheckedChanged(CompoundButton arg0,
+							boolean arg1) {
+						if (arg1)
+							Log.e("RTT_BUTTON", "yes");
+						else
+							Log.e("RTT_BUTTON", "no");
+						sipController.setIsRealTime(arg1);
+					}
+				});
 
-		
-		//initialise array Adapter
-		arrayAdapter= new ArrayAdapter<String>(this,R.layout.adapterunit);
-		chatWindowListView=(ListView)findViewById(R.id.chatListView);
+		// initialise array Adapter
+		arrayAdapter = new ArrayAdapter<String>(this, R.layout.adapterunit);
+		chatWindowListView = (ListView) findViewById(R.id.chatListView);
 		chatWindowListView.setAdapter(arrayAdapter);
-		
+
 		/*******************************************
 		 * 
 		 * Camera button
@@ -112,28 +136,29 @@ public class NG911Activity extends Activity {
 		t140Handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
-				char c = (char)msg.arg1;
+				char c = (char) msg.arg1;
 				String tmp = t140IncomingCharSeq.toString();
 				if (tmp.length() == 0)
 					t140IncomingBuffer.append("\n Server: ");
 				else
 					arrayAdapter.remove(tmp);
-								
+
 				t140IncomingBuffer.append(Character.toString(c));
 				tmp = t140IncomingCharSeq.toString();
 				arrayAdapter.add(tmp);
-				
-				if ((int)msg.arg1 == 13) // \n case
+
+				if ((int) msg.arg1 == 13) // \n case
 					t140IncomingBuffer.setLength(0);
 
 				Log.e("T140Incoming", Integer.toString(msg.arg1));
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
-		sipController = new SipController("test", "128.59.22.88", "5080", t140writer);
+		sipController = new SipController("test", "128.59.22.88", "5080",
+				t140writer);
 
-		sip = new mysip(sipController.getSharedSipProvider(),this);
-		
+		sip = new mysip(sipController.getSharedSipProvider(), this);
+
 		Button callButton = (Button) findViewById(R.id.call);
 		callButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -160,23 +185,25 @@ public class NG911Activity extends Activity {
 					TextView tv = (TextView) findViewById(R.id.message);
 					String inputMessage = tv.getText().toString();
 
-					//sipController.send(inputMessage);
-					
+					// sipController.send(inputMessage);
+
 					if (sipController.isRealTime())
 						sipController.sendRTT(T140Constants.CR_LF);
 					else
 						sip.send(inputMessage);
 					tv.setText("");
-					
-//					chatWindowTextView.append("\n User: "+inputMessage);
-					arrayAdapter.add("\n User: "+inputMessage);
-					
-					
+
+					// chatWindowTextView.append("\n User: "+inputMessage);
+					arrayAdapter.add("\n User: " + inputMessage);
+
 				}
 			}
 		});
-		
-		/* Jin : I moved these from onStart(), because onStart() called several times after closing camera */ 
+
+		/*
+		 * Jin : I moved these from onStart(), because onStart() called several
+		 * times after closing camera
+		 */
 		sendMessageEditText = (EditText) findViewById(R.id.message);
 		sendMessageEditText.setOnKeyListener(rttTextListener);
 		sendMessageEditText.addTextChangedListener(rttTextWatcher);
@@ -197,11 +224,96 @@ public class NG911Activity extends Activity {
 			// AlertDialog connectedToNetwork=new
 			// AlertDialog(getBaseContext(),false,);
 			showAlertDialog("No Network Connectivity");
-			
+
 		}
 	}
+	/**********
+	 * Get account name registered with phone- generally email id
+	 * 
+	 */
+	private String getAccountName(){
+		AccountManager accountManager=AccountManager.get(getApplicationContext());
+		Account[] accounts=accountManager.getAccountsByType("com.google");
+		Log.e("Account NAME"," "+ accounts[0].name);
+		
+		return accounts[0].name;
+	}
+	
+	/**********
+	 * Get phone number of device from TelephonyManager
+	 * 
+	 */
+	private String getDevicePhoneNumber(){
+		
+		TelephonyManager tm= (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
+		Log.e("Telephone Number: ",""+tm.getLine1Number());
+		return tm.getLine1Number();
+	}
+	
+	
 
-	private void showAlertDialog(String reason){
+	private void showAlertDialogForUserData() {
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+				NG911Activity.this);
+		LayoutInflater factory = LayoutInflater.from(this);
+        final View userDataView = factory.inflate(R.layout.userdata, null);
+		alertDialogBuilder.setView(userDataView);
+		alertDialogBuilder.setTitle("User data");
+		alertDialogBuilder.setPositiveButton("Save",
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+
+						EditText userName = (EditText) userDataView.findViewById(R.id.userName);
+						EditText userPhone = (EditText) userDataView.findViewById(R.id.userPhoneNumber);
+						SharedPreferences sharedPrefs = PreferenceManager
+								.getDefaultSharedPreferences(getApplicationContext());
+						Editor sharedPrefsEditor = sharedPrefs.edit();
+						
+						//If text fields are blank, retrieve and store value from device
+						if(userName.getText().toString().equals("")){
+							sharedPrefsEditor.putString(USER_NAME,getAccountName());
+						}else{
+							sharedPrefsEditor.putString(USER_NAME, userName
+									.getText().toString());
+						}
+						if(userPhone.getText().toString().equals("")){
+							sharedPrefsEditor.putString(USER_PHONE,getDevicePhoneNumber());
+						}else{
+							sharedPrefsEditor.putString(USER_PHONE, userPhone
+									.getText().toString());
+						}
+						sharedPrefsEditor.putBoolean(USER_DATA_SAVED, true);
+						sharedPrefsEditor.commit();
+
+					}
+				});
+
+		alertDialogBuilder.setNegativeButton("Close",
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+
+						SharedPreferences sharedPrefs = PreferenceManager
+								.getDefaultSharedPreferences(getApplicationContext());
+						Editor sharedPrefsEditor = sharedPrefs.edit();
+						sharedPrefsEditor.putString(USER_NAME, getAccountName());
+						sharedPrefsEditor.putString(USER_PHONE, getDevicePhoneNumber());
+						sharedPrefsEditor.commit();
+
+						dialog.dismiss();
+					}
+				});
+		AlertDialog alert=alertDialogBuilder.create();
+		alert.show();
+
+	}
+
+	private void showAlertDialog(String reason) {
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
 				NG911Activity.this);
 		alertDialogBuilder.setCancelable(true);
@@ -237,44 +349,46 @@ public class NG911Activity extends Activity {
 		alert.show();
 	}
 
-	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
-		if(data!=null){
+		if (data != null) {
 			if (!data.getExtras().isEmpty()) {
 				if (requestCode == PHOTO_RESULT) {
-	
+
 					Bitmap photoResult = (Bitmap) data.getExtras().get("data");
 					ImageView imageView = new ImageView(
 							this.getApplicationContext());
 					imageView.setImageBitmap(photoResult);
 					setContentView(imageView);
-	
+
 				}
-				if(requestCode==IMAGE_RECEIVED_RESULT){
-	//				byte[] jpegByteArray=(byte[]) data.getExtras().get(CameraCapture.JPEG_STRING);
-					Uri uri=(Uri) data.getExtras().get(CameraCapture.JPEG_STRING);
+				if (requestCode == IMAGE_RECEIVED_RESULT) {
+					// byte[] jpegByteArray=(byte[])
+					// data.getExtras().get(CameraCapture.JPEG_STRING);
+					Uri uri = (Uri) data.getExtras().get(
+							CameraCapture.JPEG_STRING);
 					try {
-						InputStream is=getContentResolver().openInputStream(uri);
-						InputStreamReader isr=new InputStreamReader(is);
-						BufferedReader br=new BufferedReader(isr);
-						
-						StringBuilder sb=new StringBuilder();
-						
-						String read= br.readLine();
-						int i=0;
-						while(read!=null){
-							read=br.readLine();
+						InputStream is = getContentResolver().openInputStream(
+								uri);
+						InputStreamReader isr = new InputStreamReader(is);
+						BufferedReader br = new BufferedReader(isr);
+
+						StringBuilder sb = new StringBuilder();
+
+						String read = br.readLine();
+						int i = 0;
+						while (read != null) {
+							read = br.readLine();
 							sb.append(read);
-							sip.send(read);	
+							sip.send(read);
 						}
-						String jpegString=sb.toString();
-						
+						String jpegString = sb.toString();
+
 						sip.send(jpegString);
-						
-						Log.e(TAG,"jpegString is: "+jpegString);
+
+						Log.e(TAG, "jpegString is: " + jpegString);
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -282,16 +396,18 @@ public class NG911Activity extends Activity {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					Log.e(TAG,"Received image result from cameraCapture class");
-					
-	//				Bitmap pictureTaken = BitmapFactory.decodeByteArray(jpegByteArray, 0,
-	//				jpegByteArray.length);
-	//				Log.e(TAG+ "onpictureTaken()","bitmap is: "+pictureTaken.toString());
-	//				ImageView imageView = new ImageView(getApplicationContext());
-	//				imageView.setImageBitmap(pictureTaken);
-	//				setContentView(imageView);
-					
-					
+					Log.e(TAG, "Received image result from cameraCapture class");
+
+					// Bitmap pictureTaken =
+					// BitmapFactory.decodeByteArray(jpegByteArray, 0,
+					// jpegByteArray.length);
+					// Log.e(TAG+
+					// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
+					// ImageView imageView = new
+					// ImageView(getApplicationContext());
+					// imageView.setImageBitmap(pictureTaken);
+					// setContentView(imageView);
+
 				}
 			}
 		}
@@ -301,38 +417,46 @@ public class NG911Activity extends Activity {
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
 
-			Intent intent = new Intent(getBaseContext(),
-					CameraCapture.class);
-			startActivityForResult(intent,IMAGE_RECEIVED_RESULT);
-			
-//			Android Camera API
-//			Intent intent = new Intent(
-//					android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-//			startActivityForResult(intent, PHOTO_RESULT);
+			Intent intent = new Intent(getBaseContext(), CameraCapture.class);
+			startActivityForResult(intent, IMAGE_RECEIVED_RESULT);
+
+			// Android Camera API
+			// Intent intent = new Intent(
+			// android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+			// startActivityForResult(intent, PHOTO_RESULT);
 
 		}
 	};
 
-	static boolean flagLostSent=false;
+	static boolean flagLostSent = false;
 	LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) {
 			/*
 			 * Toast.makeText(getApplicationContext(),"location is"+location.
 			 * toString() , Toast.LENGTH_LONG).show();
 			 */
-//			if(!flagLostSent){
-				LostConnector lostConnector = LostConnector.getInstance();
-				lostConnector.setContext(getApplicationContext());
-				lostConnector.setLocation(location.getLatitude(),
-						location.getLongitude());
-				if (lostConnector.requestSent() == false) {
-					String serverIp=lostConnector.getPSAPD();
-					if(serverIp.equals("")||serverIp==null){
-						showAlertDialog("No PSAP server nearby");
-					}
+			// if(!flagLostSent){
+			LostConnector lostConnector = LostConnector.getInstance();
+			lostConnector.setContext(getApplicationContext());
+			lostConnector.setLocation(location.getLatitude(),
+					location.getLongitude());
+			
+			/**********
+			 * Exit app based on PSAP server response
+			 *********/
+			if (lostConnector.requestSent() == false) {
+				String serverIp = lostConnector.getPSAPD();
+				if(serverIp==null){
+					showAlertDialog("Could not reach PSAP server");
 				}
-				flagLostSent=true;
-//			}
+				else if ( serverIp.equals(LostConnector.NO_RESPONSE)) {
+					showAlertDialog(serverIp);
+				}else if(serverIp.equals("")){
+					showAlertDialog("No PSAP server nearby");
+				}
+			}
+			flagLostSent = true;
+			// }
 		}
 
 		public void onProviderDisabled(String provider) {
@@ -375,7 +499,7 @@ public class NG911Activity extends Activity {
 	protected void onStart() {
 		// TODO Auto-generated method stub
 		Log.e(TAG, "onStart()");
-		
+
 		try {
 			alertIfNoNetwork();
 			/**************************
@@ -414,7 +538,7 @@ public class NG911Activity extends Activity {
 		public boolean onKey(View v, int keyCode, KeyEvent event) {
 			// TODO Auto-generated method stub
 			Log.e(TAG, "onKey() of rttTextListener called");
-			
+
 			if (keyCode == KeyEvent.KEYCODE_0) {
 				Log.e(TAG, "caught 0");
 			}
@@ -445,7 +569,7 @@ public class NG911Activity extends Activity {
 			if (count > 0)
 				sipController.sendRTT(s.charAt(start));
 
-//			chatWindowTextView.setText(s);
+			// chatWindowTextView.setText(s);
 		}
 
 		public void beforeTextChanged(CharSequence s, int start, int count,
@@ -459,8 +583,6 @@ public class NG911Activity extends Activity {
 			Log.e(TAG, "afterTextChanged " + s.toString());
 		}
 	};
-
-	
 
 	@Override
 	protected void onStop() {
