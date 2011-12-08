@@ -23,7 +23,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-public class mysip extends Activity implements SipProviderListener {
+public class mysip implements SipProviderListener {
 
 	String pidflo;
 	String lon;
@@ -56,7 +56,7 @@ public class mysip extends Activity implements SipProviderListener {
 		Log.e("IP:", ip);
 		// sip.addSipProviderListener(SipProvider.ANY, this);
 		sip.addSipProviderListener(SipProvider.ANY, this);
-
+		
 	}
 
 	// To send images
@@ -109,19 +109,19 @@ public class mysip extends Activity implements SipProviderListener {
 		String tag = SipProvider.pickTag();
 		Log.e("TAG", tag);
 
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(NG911.getApplicationContext());
-		String phoneNumber = prefs.getString(NG911Activity.USER_PHONE,
-				"undefined");
-		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
+//		SharedPreferences prefs = PreferenceManager
+//				.getDefaultSharedPreferences(NG911.getApplicationContext());
+//		String phoneNumber = prefs.getString(NG911Activity.USER_PHONE,
+//				"undefined");
+//		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
 
-		Header h0 = new Header("From", userName + " <sip:android@" + ip + ":"
+		Header h0 = new Header("From", "<sip:android@" + ip + ":"
 				+ sip.getPort() + ">;tag=" + tag);
 		msg.addHeaderAfter(h0, "To");
 
-		Header h1 = new Header("Contact", "<sip:" + phoneNumber + "@" + ip
-				+ ":" + sip.getPort() + ">;tag=" + tag);
-		msg.addHeaderAfter(h1, "From");
+//		Header h1 = new Header("Contact", "<sip:" + "phoneNumber" + "@" + ip
+//				+ ":" + sip.getPort() + ">;tag=" + tag);
+//		msg.addHeaderAfter(h1, "From");
 
 		sip.sendMessage(msg);
 
@@ -140,17 +140,26 @@ public class mysip extends Activity implements SipProviderListener {
 	public void onReceivedMessage(SipProvider sip_provider, Message msg) {
 		// TODO Auto-generated method stub
 
+		try {
+			Log.e("onReceived message: ",""+msg.getBody());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		if (msg.isMessage()) // This is a new MESSAGE from PSAP
 		{
 			(new TransactionServer(sip_provider, msg, null))
 					.respondWith(MessageFactory.createResponse(msg, 200,
 							SipResponses.reasonOf(200), null));
 			Log.e("Incoming", msg.getBody());
-			NG911.displayIncoming(msg.getBody());
+//			NG911.displayIncoming(msg.getBody());
 			android.os.Message msgos = new android.os.Message();
 			msgos.obj = msg.getBody();
+			Log.e("Incoming msgOS", "msgData "+msgos.getData().toString());
 			sipHandler.sendMessage(msgos);
-			Log.e("Incoming", msg.getBody());
+
+			
 		} else if (msg.isResponse()) // This is ACK message.
 		{
 			Log.e("SIP", "ACK Received from MYSIP: ");
@@ -161,7 +170,7 @@ public class mysip extends Activity implements SipProviderListener {
 			if (messagelist.remove(new MessageTime(tagr, "")))
 				Log.e("SIP", "Removed tag: " + tagr);
 		} else {
-			Log.e("SIP", "First Line: " + msg.getFirstLine());
+			Log.e("SIP", "First Line second: " + msg.getFirstLine());
 
 		}
 		// NG911.displayIncoming(msg.getBody());
