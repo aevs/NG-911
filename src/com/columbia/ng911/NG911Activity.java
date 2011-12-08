@@ -5,9 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
 
 import org.zoolu.sip.provider.SipStack;
-
 
 import se.omnitor.protocol.t140.T140Constants;
 
@@ -53,6 +56,7 @@ import android.widget.Toast;
 
 public class NG911Activity extends Activity {
 	/* For SIP */
+	private Handler sipHandler;
 	private SipController sipController;
 	private Handler t140Handler;
 	private T140Writer t140writer;
@@ -62,9 +66,9 @@ public class NG911Activity extends Activity {
 	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
 
-	private static final String USER_NAME = "userName";
-	private static final String USER_PHONE = "userPhone";
-	private static final String USER_DATA_SAVED = "userDataSaved";
+	public static final String USER_NAME = "userName";
+	public static final String USER_PHONE = "userPhone";
+	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
 
 	public static final int IMAGE_RECEIVED_RESULT = 39485439;
@@ -83,7 +87,6 @@ public class NG911Activity extends Activity {
 		setContentView(R.layout.main);
 		SipStack.debug_level = 0;
 
-		
 		/**********************
 		 * 
 		 * Request for user data only the first time
@@ -91,12 +94,10 @@ public class NG911Activity extends Activity {
 		 ************************/
 		SharedPreferences sharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(getApplicationContext());
-		if(!sharedPreferences.getBoolean(USER_DATA_SAVED, false)){
+		if (!sharedPreferences.getBoolean(USER_DATA_SAVED, false)) {
 			showAlertDialogForUserData();
 		}
 
-		
-		
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		alertIfNoNetwork();
@@ -130,6 +131,15 @@ public class NG911Activity extends Activity {
 		Button cameraButton = (Button) findViewById(R.id.sendPhotoButton);
 		cameraButton.setOnClickListener(cameraButtonOnClickListener);
 
+		sipHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				String incomingMessage = (String) msg.obj;
+				arrayAdapter.add("\n Server: " + incomingMessage);
+				Log.e("MAIN INCOMING: ", incomingMessage);
+			}
+		};
+
 		/********************************
 		 * SipController Initialize
 		 *******************************/
@@ -157,7 +167,8 @@ public class NG911Activity extends Activity {
 		sipController = new SipController("test", "128.59.22.88", "5080",
 				t140writer);
 
-		sip = new mysip(sipController.getSharedSipProvider(), this);
+		sip = new mysip(sipController.getSharedSipProvider(), this,
+				getLocalIpAddress(), sipHandler);
 
 		Button callButton = (Button) findViewById(R.id.call);
 		callButton.setOnClickListener(new OnClickListener() {
@@ -227,36 +238,36 @@ public class NG911Activity extends Activity {
 
 		}
 	}
+
 	/**********
 	 * Get account name registered with phone- generally email id
 	 * 
 	 */
-	private String getAccountName(){
-		AccountManager accountManager=AccountManager.get(getApplicationContext());
-		Account[] accounts=accountManager.getAccountsByType("com.google");
-		Log.e("Account NAME"," "+ accounts[0].name);
-		
+	private String getAccountName() {
+		AccountManager accountManager = AccountManager
+				.get(getApplicationContext());
+		Account[] accounts = accountManager.getAccountsByType("com.google");
+		Log.e("Account NAME", " " + accounts[0].name);
+
 		return accounts[0].name;
 	}
-	
+
 	/**********
 	 * Get phone number of device from TelephonyManager
 	 * 
 	 */
-	private String getDevicePhoneNumber(){
-		
-		TelephonyManager tm= (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
-		Log.e("Telephone Number: ",""+tm.getLine1Number());
+	private String getDevicePhoneNumber() {
+
+		TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+		Log.e("Telephone Number: ", "" + tm.getLine1Number());
 		return tm.getLine1Number();
 	}
-	
-	
 
 	private void showAlertDialogForUserData() {
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
 				NG911Activity.this);
 		LayoutInflater factory = LayoutInflater.from(this);
-        final View userDataView = factory.inflate(R.layout.userdata, null);
+		final View userDataView = factory.inflate(R.layout.userdata, null);
 		alertDialogBuilder.setView(userDataView);
 		alertDialogBuilder.setTitle("User data");
 		alertDialogBuilder.setPositiveButton("Save",
@@ -266,22 +277,27 @@ public class NG911Activity extends Activity {
 					public void onClick(DialogInterface dialog, int which) {
 						// TODO Auto-generated method stub
 
-						EditText userName = (EditText) userDataView.findViewById(R.id.userName);
-						EditText userPhone = (EditText) userDataView.findViewById(R.id.userPhoneNumber);
+						EditText userName = (EditText) userDataView
+								.findViewById(R.id.userName);
+						EditText userPhone = (EditText) userDataView
+								.findViewById(R.id.userPhoneNumber);
 						SharedPreferences sharedPrefs = PreferenceManager
 								.getDefaultSharedPreferences(getApplicationContext());
 						Editor sharedPrefsEditor = sharedPrefs.edit();
-						
-						//If text fields are blank, retrieve and store value from device
-						if(userName.getText().toString().equals("")){
-							sharedPrefsEditor.putString(USER_NAME,getAccountName());
-						}else{
+
+						// If text fields are blank, retrieve and store value
+						// from device
+						if (userName.getText().toString().equals("")) {
+							sharedPrefsEditor.putString(USER_NAME,
+									getAccountName());
+						} else {
 							sharedPrefsEditor.putString(USER_NAME, userName
 									.getText().toString());
 						}
-						if(userPhone.getText().toString().equals("")){
-							sharedPrefsEditor.putString(USER_PHONE,getDevicePhoneNumber());
-						}else{
+						if (userPhone.getText().toString().equals("")) {
+							sharedPrefsEditor.putString(USER_PHONE,
+									getDevicePhoneNumber());
+						} else {
 							sharedPrefsEditor.putString(USER_PHONE, userPhone
 									.getText().toString());
 						}
@@ -301,14 +317,16 @@ public class NG911Activity extends Activity {
 						SharedPreferences sharedPrefs = PreferenceManager
 								.getDefaultSharedPreferences(getApplicationContext());
 						Editor sharedPrefsEditor = sharedPrefs.edit();
-						sharedPrefsEditor.putString(USER_NAME, getAccountName());
-						sharedPrefsEditor.putString(USER_PHONE, getDevicePhoneNumber());
+						sharedPrefsEditor
+								.putString(USER_NAME, getAccountName());
+						sharedPrefsEditor.putString(USER_PHONE,
+								getDevicePhoneNumber());
 						sharedPrefsEditor.commit();
 
 						dialog.dismiss();
 					}
 				});
-		AlertDialog alert=alertDialogBuilder.create();
+		AlertDialog alert = alertDialogBuilder.create();
 		alert.show();
 
 	}
@@ -440,18 +458,23 @@ public class NG911Activity extends Activity {
 			lostConnector.setContext(getApplicationContext());
 			lostConnector.setLocation(location.getLatitude(),
 					location.getLongitude());
-			
+
+			Geolocation.updateGeolocatoin(
+					String.valueOf(location.getLongitude()),
+					String.valueOf(location.getLatitude()));
+
+			Log.e("Geolocation: ",""+ String.valueOf(location.getLongitude())+
+					String.valueOf(location.getLatitude()));
 			/**********
 			 * Exit app based on PSAP server response
 			 *********/
 			if (lostConnector.requestSent() == false) {
 				String serverIp = lostConnector.getPSAPD();
-				if(serverIp==null){
+				if (serverIp == null) {
 					showAlertDialog("Could not reach PSAP server");
-				}
-				else if ( serverIp.equals(LostConnector.NO_RESPONSE)) {
+				} else if (serverIp.equals(LostConnector.NO_RESPONSE)) {
 					showAlertDialog(serverIp);
-				}else if(serverIp.equals("")){
+				} else if (serverIp.equals("")) {
 					showAlertDialog("No PSAP server nearby");
 				}
 			}
@@ -493,6 +516,40 @@ public class NG911Activity extends Activity {
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
+	}
+
+	public void displayIncoming(String message) {
+		// System.out.println("\n PSAP: "+message);
+		Toast.makeText(getApplicationContext(), "Received:" + message,
+				Toast.LENGTH_LONG).show();
+
+	}
+
+	public String getLocalIpAddress() {
+		try {
+			for (Enumeration<NetworkInterface> en = NetworkInterface
+					.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface intf = en.nextElement();
+				for (Enumeration<InetAddress> enumIpAddr = intf
+						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = enumIpAddr.nextElement();
+					if (!inetAddress.isLoopbackAddress()) {
+						return inetAddress.getHostAddress().toString();
+					}
+				}
+			}
+		} catch (SocketException ex) {
+			Log.e("NETWORK", ex.toString());
+		}
+		return null;
+	}
+
+	public void notifyTimeout(MessageTime mt) {
+		// TODO : Code to update UI if the delivery of a message failed.
+		Log.e("Timeout", mt.message + "/" + mt.tag);
+		Toast.makeText(getApplicationContext(),
+				mt.message + ": Not Delivered!", Toast.LENGTH_LONG).show();
+
 	}
 
 	@Override
