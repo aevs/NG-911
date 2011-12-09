@@ -121,10 +121,14 @@ public class NG911Activity extends Activity {
 				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					public void onCheckedChanged(CompoundButton arg0,
 							boolean arg1) {
-						if (arg1)
+						if (arg1){
 							Log.e("RTT_BUTTON", "yes");
-						else
+							findViewById(R.id.rttResponseWindow).setVisibility(View.VISIBLE);
+						}
+						else{
+							findViewById(R.id.rttResponseWindow).setVisibility(View.INVISIBLE);
 							Log.e("RTT_BUTTON", "no");
+						}
 						sipController.setIsRealTime(arg1);
 					}
 				});
