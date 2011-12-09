@@ -40,6 +40,9 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
@@ -48,6 +51,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioButton;
@@ -70,6 +74,13 @@ public class NG911Activity extends Activity {
 	public static final String USER_PHONE = "userPhone";
 	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
+	
+	private final String EARTHQUAKE="Earthquake in the area";
+	private final String FIRE="Fire in the area, request fire engine";
+	private final String MEDICAL_EMERGENCY="Medical emergency, request ambulance";
+	private final String FLOOD="Flood alert";
+	private final String GUNSHOTS="Gunshots heard, request police assistance";
+	private final String ROAD_ACCIDENT="Road Accident, request ambulance";
 
 	public static final int IMAGE_RECEIVED_RESULT = 39485439;
 
@@ -128,7 +139,7 @@ public class NG911Activity extends Activity {
 		 * Camera button
 		 * 
 		 *******************************************/
-		Button cameraButton = (Button) findViewById(R.id.sendPhotoButton);
+		ImageButton cameraButton = (ImageButton) findViewById(R.id.sendPhotoButton);
 		cameraButton.setOnClickListener(cameraButtonOnClickListener);
 
 		sipHandler = new Handler() {
@@ -170,21 +181,21 @@ public class NG911Activity extends Activity {
 		sip = new mysip(sipController.getSharedSipProvider(), this,
 				getLocalIpAddress(), sipHandler);
 
-		Button callButton = (Button) findViewById(R.id.call);
-		callButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				System.out.println("Outgoing call");
-				sipController.call();
-			}
-		});
-
-		Button hangButton = (Button) findViewById(R.id.hang);
-		hangButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				System.out.println("Hang up call");
-				sipController.hangup();
-			}
-		});
+//		Button callButton = (Button) findViewById(R.id.call);
+//		callButton.setOnClickListener(new OnClickListener() {
+//			public void onClick(View v) {
+//				System.out.println("Outgoing call");
+//				sipController.call();
+//			}
+//		});
+//
+//		Button hangButton = (Button) findViewById(R.id.hang);
+//		hangButton.setOnClickListener(new OnClickListener() {
+//			public void onClick(View v) {
+//				System.out.println("Hang up call");
+//				sipController.hangup();
+//			}
+//		});
 
 		Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
 		sendMessageButton.setOnClickListener(new OnClickListener() {
@@ -367,6 +378,52 @@ public class NG911Activity extends Activity {
 		alert.show();
 	}
 
+	
+	
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub
+		switch (item.getItemId()){
+			case R.id.earthquake:
+				sip.send(EARTHQUAKE);
+				arrayAdapter.add("User:TEMPLATE: " + EARTHQUAKE);
+				break;
+			case R.id.fire:
+				sip.send(FIRE);
+				arrayAdapter.add("User:TEMPLATE: "+FIRE);
+				break;
+			case R.id.flood:
+				sip.send(FLOOD);
+				arrayAdapter.add("User:TEMPLATE: " + FLOOD);
+				break;
+			case R.id.gunshots:
+				sip.send(GUNSHOTS);
+				arrayAdapter.add("User:TEMPLATE: "+GUNSHOTS);
+				break;
+			case R.id.roadAccident:
+				sip.send(ROAD_ACCIDENT);
+				arrayAdapter.add("User:TEMPLATE:"+ROAD_ACCIDENT);
+				break;
+			case R.id.medicalEmergency:
+				sip.send(MEDICAL_EMERGENCY);
+				arrayAdapter.add("User:TEMPLATE: "+MEDICAL_EMERGENCY);
+				break;
+				
+		}
+		
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		MenuInflater inflater=getMenuInflater();
+		inflater.inflate(R.menu.menu, menu);
+		
+		return super.onCreateOptionsMenu(menu);
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
@@ -400,11 +457,10 @@ public class NG911Activity extends Activity {
 						while (read != null) {
 							read = br.readLine();
 							sb.append(read);
-							sip.send(read);
 						}
 						String jpegString = sb.toString();
 
-						sip.send(jpegString);
+						sip.sendImage(jpegString);
 
 						Log.e(TAG, "jpegString is: " + jpegString);
 					} catch (FileNotFoundException e) {

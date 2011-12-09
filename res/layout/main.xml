@@ -1,24 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_height="fill_parent"
-android:layout_width="fill_parent"-->
-<LinearLayout 
-xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
-	android:isScrollContainer="true"
-	android:layout_height="fill_parent" android:weightSum="1">
-	<ListView android:id="@+id/chatListView"
-	android:layout_width="fill_parent"
-	android:stackFromBottom="true"
-	android:transcriptMode="alwaysScroll"
-	android:layout_weight="1"
-	android:layout_height="300dp"/>
+	android:isScrollContainer="true" android:layout_height="fill_parent"
+	android:weightSum="1">
+	<ListView android:id="@+id/chatListView" android:layout_width="fill_parent"
+		android:stackFromBottom="true" android:transcriptMode="alwaysScroll"
+		android:background="@drawable/background"
+		android:layout_weight="1" android:layout_height="300dp" />
 	<TextView android:layout_width="fill_parent"
-		android:paddingTop="10dp"
-		android:id="@+id/rttResponseWindow"
+		android:paddingTop="10dp" android:id="@+id/rttResponseWindow"
 		android:layout_height="@android:dimen/thumbnail_height"
-		android:background="@android:drawable/alert_light_frame"
-		android:hint="RTT message from Psap server" />		
+		android:background="@android:drawable/alert_light_frame" android:hint="RTT message from Psap server" />
 	<RelativeLayout android:layout_width="wrap_content"
 		android:layout_height="wrap_content">
 		<RadioGroup android:id="@+id/messagingProtocol"
@@ -33,23 +25,20 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 				android:layout_width="wrap_content">
 			</RadioButton>
 		</RadioGroup>
-	<Button android:layout_width="wrap_content" android:id="@+id/sendMessageButton"
-		android:layout_below="@id/messagingProtocol"
-		android:layout_height="wrap_content" 
-		android:text="Send">
+		<ImageButton android:layout_width="60dp" android:id="@+id/sendPhotoButton"
+			android:layout_height="55dp" 
+			android:clickable="true"
+			android:layout_toRightOf="@id/messagingProtocol"
+			android:layout_marginLeft="30dp"
+			android:layout_gravity="center_horizontal" android:src="@android:drawable/ic_menu_camera"/>
+		<Button android:layout_width="wrap_content" android:id="@+id/sendMessageButton"
+			android:layout_below="@id/sendPhotoButton" android:layout_height="wrap_content"
+			android:text="Send">
 		</Button>
-	<EditText android:id="@+id/message" android:layout_height="wrap_content"
-		android:layout_below="@id/messagingProtocol"
-		android:hint="tap to enter message"
-		android:inputType="textNoSuggestions"
-		android:layout_toRightOf="@id/sendMessageButton"
-		android:layout_marginLeft="15dp"
-		android:layout_width="fill_parent">
-		<requestFocus></requestFocus>
-	</EditText>
-	<Button android:id="@+id/hang" android:layout_width="wrap_content" android:text="Hang" android:layout_height="wrap_content" android:layout_alignParentTop="true" android:layout_alignParentRight="true"></Button>
-	<Button android:id="@+id/call" android:layout_width="wrap_content" android:text="Call" android:layout_height="wrap_content" android:layout_above="@+id/message" android:layout_toLeftOf="@+id/hang"></Button>
+		<EditText android:id="@+id/message" android:layout_height="wrap_content"
+			android:layout_below="@id/sendPhotoButton" android:hint="tap to enter message"
+			android:inputType="textNoSuggestions" android:layout_toRightOf="@id/sendMessageButton"
+			android:layout_marginLeft="15dp" android:layout_width="fill_parent">
+		</EditText>
 	</RelativeLayout>
-	<Button android:layout_width="300dp" android:id="@+id/sendPhotoButton" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:layout_gravity="center_horizontal" android:text="Take and send photo"></Button>
 </LinearLayout>
-<!--/ScrollView-->

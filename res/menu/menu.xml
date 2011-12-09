@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    		<item android:id="@+id/fire"
+    			  android:title="Fire"/>
+    	 	<item android:id="@+id/flood"
+    	 		  android:title="Flood"/>
+    	 	<item android:id="@+id/earthquake"
+    	 		  android:title="Earthquake"/>
+    	 	<item android:id="@+id/roadAccident"
+    	 		  android:title="Road Accident"/>
+ 	 		<item android:id="@+id/gunshots"
+ 	 			  android:title="Gunshots"/>
+    	  	<item android:id="@+id/medicalEmergency"
+    	  		  android:title="Medical Emergency"/>
+</menu>

@@ -28,7 +28,8 @@
         </activity>
         <activity 
         android:screenOrientation="landscape"
-        android:name=".CameraCapture">
+        android:name=".CameraCapture"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
 
     </application>
