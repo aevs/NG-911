@@ -16,7 +16,7 @@
   android:layout_marginBottom="20dp"
   android:inputType="text"
   />
-  <EditText 
+  <!--EditText 
   android:id="@+id/userPhoneNumber"
   android:layout_marginLeft="20dp"
   android:layout_marginRight="20dp"
@@ -26,6 +26,6 @@
   android:layout_height="wrap_content"
   android:hint="Phone Number"
   android:inputType="phone"
-  />
+  /-->
     
 </LinearLayout>

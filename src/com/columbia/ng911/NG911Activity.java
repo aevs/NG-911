@@ -294,8 +294,6 @@ public class NG911Activity extends Activity {
 
 						EditText userName = (EditText) userDataView
 								.findViewById(R.id.userName);
-						EditText userPhone = (EditText) userDataView
-								.findViewById(R.id.userPhoneNumber);
 						SharedPreferences sharedPrefs = PreferenceManager
 								.getDefaultSharedPreferences(getApplicationContext());
 						Editor sharedPrefsEditor = sharedPrefs.edit();
@@ -309,13 +307,8 @@ public class NG911Activity extends Activity {
 							sharedPrefsEditor.putString(USER_NAME, userName
 									.getText().toString());
 						}
-						if (userPhone.getText().toString().equals("")) {
 							sharedPrefsEditor.putString(USER_PHONE,
 									getDevicePhoneNumber());
-						} else {
-							sharedPrefsEditor.putString(USER_PHONE, userPhone
-									.getText().toString());
-						}
 						sharedPrefsEditor.putBoolean(USER_DATA_SAVED, true);
 						sharedPrefsEditor.commit();
 
