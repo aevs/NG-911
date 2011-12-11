@@ -8,7 +8,9 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 import org.zoolu.sip.provider.SipStack;
 
@@ -23,6 +25,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
@@ -45,6 +48,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.widget.ArrayAdapter;
@@ -82,10 +86,16 @@ public class NG911Activity extends Activity {
 	private final String FLOOD="Flood alert";
 	private final String GUNSHOTS="Gunshots heard, request police assistance";
 	private final String ROAD_ACCIDENT="Road Accident, request ambulance";
+	
+	private final boolean FLAG_MESSAGE_FROM_USER=false;
+	private final boolean FLAG_MESSAGE_FROM_911=true;
 
 	public static final int IMAGE_RECEIVED_RESULT = 39485439;
 
 	private ArrayAdapter<String> arrayAdapter;
+	private CustomArrayAdapter customArrayAdapter;
+	
+	
 	private ListView chatWindowListView;
 
 	/** Called when the activity is first created. */
@@ -137,10 +147,14 @@ public class NG911Activity extends Activity {
 				});
 
 		// initialise array Adapter
-		arrayAdapter = new ArrayAdapter<String>(this, R.layout.adapterunit);
+		arrayAdapter = new ArrayAdapter<String>(this, R.layout.adapterunituser);
+		customArrayAdapter= new CustomArrayAdapter(getApplicationContext(), R.id.adapterUnitText911);
+		
+		
 		chatWindowListView = (ListView) findViewById(R.id.chatListView);
-		chatWindowListView.setAdapter(arrayAdapter);
-
+//		chatWindowListView.setAdapter(arrayAdapter);
+		chatWindowListView.setAdapter(customArrayAdapter);
+		
 		/*******************************************
 		 * 
 		 * Camera button
@@ -153,7 +167,8 @@ public class NG911Activity extends Activity {
 			@Override
 			public void handleMessage(Message msg) {
 				String incomingMessage = (String) msg.obj;
-				arrayAdapter.add("\n Server: " + incomingMessage);
+//				arrayAdapter.add("\n Server: " + incomingMessage);
+				customArrayAdapter.add("911: " + incomingMessage,FLAG_MESSAGE_FROM_911);
 				Log.e("MAIN INCOMING: ", incomingMessage);
 			}
 		};
@@ -167,13 +182,17 @@ public class NG911Activity extends Activity {
 				char c = (char) msg.arg1;
 				String tmp = t140IncomingCharSeq.toString();
 				if (tmp.length() == 0)
-					t140IncomingBuffer.append("\n Server: ");
-				else
-					arrayAdapter.remove(tmp);
+					t140IncomingBuffer.append("\n 911: ");
+				/************
+				 * Temporary buffer needs to be written to middle textBox
+				 */
+//				else
+//					arrayAdapter.remove(tmp);
 
 				t140IncomingBuffer.append(Character.toString(c));
 				tmp = t140IncomingCharSeq.toString();
-				arrayAdapter.add(tmp);
+//				arrayAdapter.add(tmp);
+				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
 
 				if ((int) msg.arg1 == 13) // \n case
 					t140IncomingBuffer.setLength(0);
@@ -188,21 +207,6 @@ public class NG911Activity extends Activity {
 		sip = new mysip(sipController.getSharedSipProvider(), this,
 				getLocalIpAddress(), sipHandler);
 
-//		Button callButton = (Button) findViewById(R.id.call);
-//		callButton.setOnClickListener(new OnClickListener() {
-//			public void onClick(View v) {
-//				System.out.println("Outgoing call");
-//				sipController.call();
-//			}
-//		});
-//
-//		Button hangButton = (Button) findViewById(R.id.hang);
-//		hangButton.setOnClickListener(new OnClickListener() {
-//			public void onClick(View v) {
-//				System.out.println("Hang up call");
-//				sipController.hangup();
-//			}
-//		});
 
 		Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
 		sendMessageButton.setOnClickListener(new OnClickListener() {
@@ -216,14 +220,17 @@ public class NG911Activity extends Activity {
 
 					// sipController.send(inputMessage);
 
+					//If else condition redundant since send button not displayed in RTT mode
 					if (sipController.isRealTime())
 						sipController.sendRTT(T140Constants.CR_LF);
-					else
+					else{
 						sip.send(inputMessage);
+//						messagesList.add(inputMessage);
+						customArrayAdapter.add("Me: "+inputMessage,FLAG_MESSAGE_FROM_USER);
+					}
 					tv.setText("");
 
-					// chatWindowTextView.append("\n User: "+inputMessage);
-					arrayAdapter.add("\n User: " + inputMessage);
+//					arrayAdapter.add("\n User: " + inputMessage);
 
 				}
 			}
@@ -387,27 +394,33 @@ public class NG911Activity extends Activity {
 		switch (item.getItemId()){
 			case R.id.earthquake:
 				sip.send(EARTHQUAKE);
-				arrayAdapter.add("User:TEMPLATE: " + EARTHQUAKE);
+//				arrayAdapter.add("User: TEMPLATE: " + EARTHQUAKE);
+				customArrayAdapter.add("Me: TEMPLATE: " + EARTHQUAKE,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.fire:
 				sip.send(FIRE);
-				arrayAdapter.add("User:TEMPLATE: "+FIRE);
+//				arrayAdapter.add("User:TEMPLATE: "+FIRE);
+				customArrayAdapter.add("Me: TEMPLATE: " + FIRE,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.flood:
 				sip.send(FLOOD);
-				arrayAdapter.add("User:TEMPLATE: " + FLOOD);
+//				arrayAdapter.add("User:TEMPLATE: " + FLOOD);
+				customArrayAdapter.add("Me: TEMPLATE: " + FLOOD,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.gunshots:
 				sip.send(GUNSHOTS);
-				arrayAdapter.add("User:TEMPLATE: "+GUNSHOTS);
+//				arrayAdapter.add("User:TEMPLATE: "+GUNSHOTS);
+				customArrayAdapter.add("Me: TEMPLATE: " + GUNSHOTS,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.roadAccident:
 				sip.send(ROAD_ACCIDENT);
-				arrayAdapter.add("User:TEMPLATE:"+ROAD_ACCIDENT);
+//				arrayAdapter.add("User:TEMPLATE:"+ROAD_ACCIDENT);
+				customArrayAdapter.add("Me: TEMPLATE: " + ROAD_ACCIDENT,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.medicalEmergency:
 				sip.send(MEDICAL_EMERGENCY);
-				arrayAdapter.add("User:TEMPLATE: "+MEDICAL_EMERGENCY);
+//				arrayAdapter.add("User:TEMPLATE: "+MEDICAL_EMERGENCY);
+				customArrayAdapter.add("Me: TEMPLATE: " + MEDICAL_EMERGENCY,FLAG_MESSAGE_FROM_USER);
 				break;
 				
 		}
@@ -678,15 +691,18 @@ public class NG911Activity extends Activity {
 					"new charSequence is ="
 							+ s.subSequence(start, start + count));
 
+			RadioButton rb=(RadioButton)findViewById(R.id.RTP);
+			if(rb.isChecked()){
 			// RTT send
-			if (count > 0)
-				sipController.sendRTT(s.charAt(start));
-			
-			if(sendMessageEditText.getLineCount()>1){
-				arrayAdapter.add("User: "+sendMessageEditText.getText().toString());
-				sendMessageEditText.setText("");
+				if (count > 0)
+					sipController.sendRTT(s.charAt(start));
+				
+				if(sendMessageEditText.getLineCount()>1){
+//					arrayAdapter.add("User: "+sendMessageEditText.getText().toString());
+					customArrayAdapter.add("Me: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_USER);
+					sendMessageEditText.setText("");
+				}
 			}
-			// chatWindowTextView.setText(s);
 		}
 
 		public void beforeTextChanged(CharSequence s, int start, int count,
@@ -708,4 +724,6 @@ public class NG911Activity extends Activity {
 
 		locationManager.removeUpdates(locationListener);
 	}
+	
+	
 }
