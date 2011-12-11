@@ -152,7 +152,6 @@ public class NG911Activity extends Activity {
 		
 		
 		chatWindowListView = (ListView) findViewById(R.id.chatListView);
-//		chatWindowListView.setAdapter(arrayAdapter);
 		chatWindowListView.setAdapter(customArrayAdapter);
 		
 		/*******************************************
@@ -191,7 +190,6 @@ public class NG911Activity extends Activity {
 
 				t140IncomingBuffer.append(Character.toString(c));
 				tmp = t140IncomingCharSeq.toString();
-//				arrayAdapter.add(tmp);
 				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
 
 				if ((int) msg.arg1 == 13) // \n case
@@ -229,9 +227,6 @@ public class NG911Activity extends Activity {
 						customArrayAdapter.add("Me: "+inputMessage,FLAG_MESSAGE_FROM_USER);
 					}
 					tv.setText("");
-
-//					arrayAdapter.add("\n User: " + inputMessage);
-
 				}
 			}
 		});
@@ -394,32 +389,26 @@ public class NG911Activity extends Activity {
 		switch (item.getItemId()){
 			case R.id.earthquake:
 				sip.send(EARTHQUAKE);
-//				arrayAdapter.add("User: TEMPLATE: " + EARTHQUAKE);
 				customArrayAdapter.add("Me: TEMPLATE: " + EARTHQUAKE,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.fire:
 				sip.send(FIRE);
-//				arrayAdapter.add("User:TEMPLATE: "+FIRE);
 				customArrayAdapter.add("Me: TEMPLATE: " + FIRE,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.flood:
 				sip.send(FLOOD);
-//				arrayAdapter.add("User:TEMPLATE: " + FLOOD);
 				customArrayAdapter.add("Me: TEMPLATE: " + FLOOD,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.gunshots:
 				sip.send(GUNSHOTS);
-//				arrayAdapter.add("User:TEMPLATE: "+GUNSHOTS);
 				customArrayAdapter.add("Me: TEMPLATE: " + GUNSHOTS,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.roadAccident:
 				sip.send(ROAD_ACCIDENT);
-//				arrayAdapter.add("User:TEMPLATE:"+ROAD_ACCIDENT);
 				customArrayAdapter.add("Me: TEMPLATE: " + ROAD_ACCIDENT,FLAG_MESSAGE_FROM_USER);
 				break;
 			case R.id.medicalEmergency:
 				sip.send(MEDICAL_EMERGENCY);
-//				arrayAdapter.add("User:TEMPLATE: "+MEDICAL_EMERGENCY);
 				customArrayAdapter.add("Me: TEMPLATE: " + MEDICAL_EMERGENCY,FLAG_MESSAGE_FROM_USER);
 				break;
 				

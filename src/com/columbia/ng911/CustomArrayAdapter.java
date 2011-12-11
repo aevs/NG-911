@@ -3,6 +3,7 @@ package com.columbia.ng911;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,11 +34,13 @@ public class CustomArrayAdapter extends ArrayAdapter<String> {
 		if(messagesList.get(position).isFrom911CallTaker){
 			View view=inflater.inflate(R.layout.adapterunit911, null);
 			textView=(TextView) view.findViewById(R.id.adapterUnitText911);
-			textView.setBackgroundResource(R.drawable.backgroundgradient2);
+//			textView.setBackgroundResource(R.drawable.backgroundgradientborder);
+			textView.setBackgroundColor(Color.DKGRAY);
 		}else{
 			View view=inflater.inflate(R.layout.adapterunituser, null);
 			textView=(TextView) view.findViewById(R.id.adapterUnitTextUser);
-			textView.setBackgroundResource(R.drawable.backgroundgradientborder);
+//			textView.setBackgroundResource(R.drawable.background911);
+			textView.setBackgroundColor(Color.LTGRAY);
 		}
 		textView.setText(messagesList.get(position).getMessage());
 		return textView;
