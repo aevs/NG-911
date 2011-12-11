@@ -34,13 +34,13 @@ public class CustomArrayAdapter extends ArrayAdapter<String> {
 		if(messagesList.get(position).isFrom911CallTaker){
 			View view=inflater.inflate(R.layout.adapterunit911, null);
 			textView=(TextView) view.findViewById(R.id.adapterUnitText911);
-//			textView.setBackgroundResource(R.drawable.backgroundgradientborder);
-			textView.setBackgroundColor(Color.DKGRAY);
+			textView.setBackgroundResource(R.drawable.nineoneone1);
+//			textView.setBackgroundColor(Color.DKGRAY);
 		}else{
 			View view=inflater.inflate(R.layout.adapterunituser, null);
 			textView=(TextView) view.findViewById(R.id.adapterUnitTextUser);
-//			textView.setBackgroundResource(R.drawable.background911);
-			textView.setBackgroundColor(Color.LTGRAY);
+			textView.setBackgroundResource(R.drawable.usermessage1);
+//			textView.setBackgroundColor(Color.LTGRAY);
 		}
 		textView.setText(messagesList.get(position).getMessage());
 		return textView;

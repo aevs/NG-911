@@ -688,7 +688,7 @@ public class NG911Activity extends Activity {
 				
 				if(sendMessageEditText.getLineCount()>1){
 //					arrayAdapter.add("User: "+sendMessageEditText.getText().toString());
-					customArrayAdapter.add("Me: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_USER);
+					customArrayAdapter.add("911: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_911);
 					sendMessageEditText.setText("");
 				}
 			}
