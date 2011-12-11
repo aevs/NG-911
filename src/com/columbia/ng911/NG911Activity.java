@@ -36,6 +36,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -124,9 +125,11 @@ public class NG911Activity extends Activity {
 						if (arg1){
 							Log.e("RTT_BUTTON", "yes");
 							findViewById(R.id.rttResponseWindow).setVisibility(View.VISIBLE);
+							findViewById(R.id.sendMessageButton).setVisibility(View.INVISIBLE);
 						}
 						else{
 							findViewById(R.id.rttResponseWindow).setVisibility(View.INVISIBLE);
+							findViewById(R.id.sendMessageButton).setVisibility(View.VISIBLE);
 							Log.e("RTT_BUTTON", "no");
 						}
 						sipController.setIsRealTime(arg1);
@@ -678,7 +681,11 @@ public class NG911Activity extends Activity {
 			// RTT send
 			if (count > 0)
 				sipController.sendRTT(s.charAt(start));
-
+			
+			if(sendMessageEditText.getLineCount()>1){
+				arrayAdapter.add("User: "+sendMessageEditText.getText().toString());
+				sendMessageEditText.setText("");
+			}
 			// chatWindowTextView.setText(s);
 		}
 

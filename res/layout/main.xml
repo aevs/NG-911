@@ -10,7 +10,8 @@
 	<TextView android:layout_width="fill_parent"
 		android:paddingTop="10dp" android:id="@+id/rttResponseWindow"
 		android:layout_height="@android:dimen/thumbnail_height"
-		android:background="@android:drawable/alert_light_frame" android:hint="RTT message from Psap server" />
+		android:background="@android:drawable/alert_light_frame" android:hint="RTT message from Psap server"
+		android:textSize="15dp" />
 	<RelativeLayout android:layout_width="wrap_content"
 		android:layout_height="wrap_content">
 		<RadioGroup android:id="@+id/messagingProtocol"
@@ -33,12 +34,14 @@
 			android:layout_gravity="center_horizontal" android:src="@android:drawable/ic_menu_camera"/>
 		<Button android:layout_width="wrap_content" android:id="@+id/sendMessageButton"
 			android:layout_below="@id/sendPhotoButton" android:layout_height="wrap_content"
+			android:visibility="invisible"
+			android:layout_alignParentRight="true"
 			android:text="Send">
 		</Button>
 		<EditText android:id="@+id/message" android:layout_height="wrap_content"
 			android:layout_below="@id/sendPhotoButton" android:hint="tap to enter message"
-			android:inputType="textNoSuggestions" android:layout_toRightOf="@id/sendMessageButton"
-			android:layout_marginLeft="15dp" android:layout_width="fill_parent">
+			android:inputType="textNoSuggestions|textMultiLine" android:layout_toLeftOf="@id/sendMessageButton"
+			android:layout_marginRight="15dp" android:layout_width="fill_parent">
 		</EditText>
 	</RelativeLayout>
 </LinearLayout>
