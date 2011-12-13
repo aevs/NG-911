@@ -11,6 +11,8 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.zoolu.sip.provider.SipStack;
 
@@ -71,6 +73,8 @@ public class NG911Activity extends Activity {
 	private T140Writer t140writer;
 	private StringBuffer t140IncomingBuffer = new StringBuffer("");
 	private CharSequence t140IncomingCharSeq = t140IncomingBuffer;
+	private Handler rttTimeOutHandler;
+	private Handler rttCompleteTextHandler;
 
 	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
@@ -162,6 +166,34 @@ public class NG911Activity extends Activity {
 		ImageButton cameraButton = (ImageButton) findViewById(R.id.sendPhotoButton);
 		cameraButton.setOnClickListener(cameraButtonOnClickListener);
 
+		/****************
+		 * Handler to finalize text with "." at the end of it
+		 * 
+		 ****************/
+		rttTimeOutHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				String incomingMessage = (String) msg.obj;
+				customArrayAdapter.add("Me: " + incomingMessage,FLAG_MESSAGE_FROM_USER);
+				sendMessageEditText.setText("");
+				Log.e("MAIN INCOMING: ", incomingMessage);
+			}
+		};
+		/************************
+		 * Alert user in RTT mode if text left incomplete
+		 * 
+		 *************************/
+		rttCompleteTextHandler = new Handler(){
+
+			@Override
+			public void handleMessage(Message msg) {
+				// TODO Auto-generated method stub
+				Toast.makeText(getApplicationContext(), "Please complete text..", Toast.LENGTH_LONG).show();	
+				
+			}
+			
+		};
+		
 		sipHandler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -670,6 +702,12 @@ public class NG911Activity extends Activity {
 		}
 
 	};
+	
+	boolean isTimerTaskScheduled=false;
+	boolean isCompleteTextTimerTaskScheduled=false;
+	Timer timeOutTimer= new Timer();
+	Timer completeTextTimer= new Timer();
+	
 	TextWatcher rttTextWatcher = new TextWatcher() {
 		public void onTextChanged(CharSequence s, int start, int before,
 				int count) {
@@ -686,14 +724,69 @@ public class NG911Activity extends Activity {
 				if (count > 0)
 					sipController.sendRTT(s.charAt(start));
 				
+				if(isTimerTaskScheduled){
+					timeOutTimer.cancel();
+					timeOutTimer.purge();
+					timeOutTimer=new Timer();
+				}
+				if(isCompleteTextTimerTaskScheduled){
+					completeTextTimer.cancel();
+					completeTextTimer.purge();
+					completeTextTimer=new Timer();
+				}
 				if(sendMessageEditText.getLineCount()>1){
-//					arrayAdapter.add("User: "+sendMessageEditText.getText().toString());
+
 					customArrayAdapter.add("911: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_911);
 					sendMessageEditText.setText("");
+					
+				}else if(count>0&& String.valueOf(s.charAt(start)).equals(".")){
+					
+					timeOutTimer.schedule(new TimeOutTimerTask(rttTimeOutHandler), 4000 );
+					isTimerTaskScheduled=true;
+					
+				}else{
+					completeTextTimer.schedule(new CompleteTextTimerTask(rttCompleteTextHandler),10000);
+					isCompleteTextTimerTaskScheduled=true;
 				}
 			}
+		}	
+		
+		class CompleteTextTimerTask extends TimerTask{
+			Handler handler;
+			public CompleteTextTimerTask(Handler handler){
+				this.handler=handler;
+			}
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				Message msg= new Message();
+				handler.sendMessage(msg);
+				isCompleteTextTimerTaskScheduled=false;
+			}
+			
 		}
-
+		
+		
+		class TimeOutTimerTask extends TimerTask{
+			Handler handler;
+			public TimeOutTimerTask(Handler handler){
+				this.handler=handler;
+			}
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				if(sendMessageEditText.getText().toString().length()>0){
+//					customArrayAdapter.add("911: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_911);
+					Message msg= new Message();
+					msg.obj=sendMessageEditText.getText().toString();
+					handler.sendMessage(msg);
+					isTimerTaskScheduled=false;
+				}
+			}
+		};
+		
 		public void beforeTextChanged(CharSequence s, int start, int count,
 				int after) {
 			// TODO Auto-generated method stub
