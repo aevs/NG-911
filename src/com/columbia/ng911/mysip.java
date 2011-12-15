@@ -38,13 +38,17 @@ public class mysip implements SipProviderListener {
 	String ip;
 	SipProvider siptcp;
 	Handler sipHandler;
+	Handler messageNotSentHandler;
 
 	// public mysip(String add, NG911Activity ng911)
 	public mysip(SipProvider sip_provider, NG911Activity ng911, String ip,
-			Handler sipHandler) {
+			Handler sipHandler,Handler messageNotSentHandler) {
+		
 		NG911 = ng911;
 		this.sipHandler = sipHandler;
 		this.ip = ip;
+		this.messageNotSentHandler=messageNotSentHandler;
+		
 		mon = new Monitor(this);
 		Timer timer1 = new Timer();
 		timer1.schedule(mon, 0, 400);
@@ -79,7 +83,7 @@ public class mysip implements SipProviderListener {
 		Message msg;
 		String header = "MIME-Version: 1.0\nContent-ID: <android@192.168.2.6>\nContent-Type: text/plain\nContent-Transfer-Encoding: 8bit\n\n";
 		sip.setDefaultTransport(SipProvider.PROTO_UDP);
-		if (Geolocation.isUpdated) {
+		if (Geolocation.getIsUpdated()) {
 			msg = MessageFactory.createMessageRequest(sip, new NameAddress(
 					new SipURL("test@128.59.22.88:5080")), new NameAddress(
 					new SipURL("android@" + ip + ":" + sip.getPort())), text,
@@ -94,7 +98,7 @@ public class mysip implements SipProviderListener {
 			msg.addHeaderAfter(h2, "Geolocation");
 			Header h3 = new Header("Accept", "text/plain, application/pidf+xml");
 			msg.addHeaderAfter(h3, "Geolocation-Routing");
-			Geolocation.setIsUpdated(false);
+//			Geolocation.setIsUpdated(false);
 			Log.e("sending: ", "geolocation");
 		} else {
 			msg = MessageFactory.createMessageRequest(sip, new NameAddress(
@@ -109,15 +113,21 @@ public class mysip implements SipProviderListener {
 		String tag = SipProvider.pickTag();
 		Log.e("TAG", tag);
 
+//		To be used for sending the Correct header to PSAP
+
 //		SharedPreferences prefs = PreferenceManager
 //				.getDefaultSharedPreferences(NG911.getApplicationContext());
 //		String phoneNumber = prefs.getString(NG911Activity.USER_PHONE,
 //				"undefined");
 //		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
+//		Header h0 = new Header("From", userName+" <tel:"+phoneNumber+">;tag=" + tag);
+//		msg.addHeaderAfter(h0, "To");
 
+		//Comment when server accepts userName
 		Header h0 = new Header("From", "<sip:android@" + ip + ":"
 				+ sip.getPort() + ">;tag=" + tag);
 		msg.addHeaderAfter(h0, "To");
+
 
 //		Header h1 = new Header("Contact", "<sip:" + "phoneNumber" + "@" + ip
 //				+ ":" + sip.getPort() + ">;tag=" + tag);
@@ -135,6 +145,9 @@ public class mysip implements SipProviderListener {
 
 	public void notifyTimeout(MessageTime mt) {
 		// NG911.notifyTimeout(mt);
+		android.os.Message msgos = new android.os.Message();
+		msgos.obj = mt.message;
+		messageNotSentHandler.sendMessage(msgos);
 	}
 
 	public void onReceivedMessage(SipProvider sip_provider, Message msg) {

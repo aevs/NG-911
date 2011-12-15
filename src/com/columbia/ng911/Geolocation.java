@@ -2,7 +2,7 @@ package com.columbia.ng911;
 
 public class Geolocation {
 	static String pidflo;
-	public static boolean isUpdated=false;
+	private static boolean isUpdated=false;
 	//A static function to get the PIDF-LO. Now this function can be called from wherever as needed.
 	
 	public static void updateGeolocatoin(String lon, String lat)
@@ -50,6 +50,7 @@ public class Geolocation {
 	}
 	public static String getGeolocation()
 	{
+		isUpdated = false;
 		return pidflo;
 	}
 }

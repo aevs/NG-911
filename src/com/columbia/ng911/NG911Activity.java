@@ -75,6 +75,7 @@ public class NG911Activity extends Activity {
 	private CharSequence t140IncomingCharSeq = t140IncomingBuffer;
 	private Handler rttTimeOutHandler;
 	private Handler rttCompleteTextHandler;
+	private Handler messageNotSentHandler;
 
 	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
@@ -194,6 +195,23 @@ public class NG911Activity extends Activity {
 			
 		};
 		
+		/************
+		 * Sip message time out handler
+		 * 
+		 ************/
+		messageNotSentHandler =new Handler(){
+
+			@Override
+			public void handleMessage(Message msg) {
+				// TODO Auto-generated method stub
+				super.handleMessage(msg);
+				String incomingMessage = (String) msg.obj;
+//				Toast.makeText(NG911Activity.this,incomingMessage+" : failed", Toast.LENGTH_LONG).show();
+				customArrayAdapter.add("Sending failed: "+ incomingMessage,FLAG_MESSAGE_FROM_USER);
+			}
+		};
+		
+		
 		sipHandler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -235,7 +253,7 @@ public class NG911Activity extends Activity {
 				t140writer);
 
 		sip = new mysip(sipController.getSharedSipProvider(), this,
-				getLocalIpAddress(), sipHandler);
+				getLocalIpAddress(), sipHandler,messageNotSentHandler);
 
 
 		Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
