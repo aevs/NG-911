@@ -177,6 +177,7 @@ public class NG911Activity extends Activity {
 				String incomingMessage = (String) msg.obj;
 				customArrayAdapter.add("Me: " + incomingMessage,FLAG_MESSAGE_FROM_USER);
 				sendMessageEditText.setText("");
+				sipController.sendRTT(T140Constants.CR_LF);
 				Log.e("MAIN INCOMING: ", incomingMessage);
 			}
 		};
@@ -754,7 +755,8 @@ public class NG911Activity extends Activity {
 				}
 				if(sendMessageEditText.getLineCount()>1){
 
-					customArrayAdapter.add("911: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_911);
+					customArrayAdapter.add("User: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_USER);
+					sipController.sendRTT(T140Constants.CR_LF);
 					sendMessageEditText.setText("");
 					
 				}else if(count>0&& String.valueOf(s.charAt(start)).equals(".")){
