@@ -32,7 +32,6 @@
 			android:layout_gravity="center_horizontal" android:src="@android:drawable/ic_menu_camera"/>
 		<Button android:layout_width="wrap_content" android:id="@+id/sendMessageButton"
 			android:layout_below="@id/sendPhotoButton" android:layout_height="wrap_content"
-			android:visibility="invisible"
 			android:layout_alignParentRight="true"
 			android:text="Send">
 		</Button>

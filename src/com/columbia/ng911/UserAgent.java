@@ -84,6 +84,7 @@ public class UserAgent extends CallListenerAdapter {
         }
 
         public boolean call(String target_url, String port) {
+        	Log.e("UA", "Contact Url is = " + contact_url);
             call = new Call(sip_provider, from_url, contact_url, this);
             if (port != "5060") {
             	call.call(target_url+":"+port,local_session);

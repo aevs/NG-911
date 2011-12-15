@@ -251,7 +251,7 @@ public class NG911Activity extends Activity {
 		};
 		t140writer = new T140Writer(t140Handler);
 		sipController = new SipController("test", "128.59.22.88", "5080",
-				t140writer);
+				t140writer, getDevicePhoneNumber());
 
 		sip = new mysip(sipController.getSharedSipProvider(), this,
 				getLocalIpAddress(), sipHandler,messageNotSentHandler);
@@ -344,7 +344,6 @@ public class NG911Activity extends Activity {
 		alertDialogBuilder.setPositiveButton("Save",
 				new DialogInterface.OnClickListener() {
 
-					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// TODO Auto-generated method stub
 
@@ -374,7 +373,6 @@ public class NG911Activity extends Activity {
 		alertDialogBuilder.setNegativeButton("Close",
 				new DialogInterface.OnClickListener() {
 
-					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// TODO Auto-generated method stub
 

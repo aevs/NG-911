@@ -46,7 +46,9 @@ public class SipController {
         
         private boolean isRTTconnected = false;
         
-        SipController(String serverID, String ipAddress, String port, T140Writer writer) {
+        private String phoneNumber;
+        
+        SipController(String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 0;
 
@@ -61,8 +63,11 @@ public class SipController {
 
                 System.out.println("\n\n\nLocal Sip Addr = "+ localIpAddress + ":" + sip.getPort());
 
+                this.phoneNumber = phoneNumber;
+                
                 // UserAgent
-                ua = new UserAgent(sip, this.localIpAddress, "Android", writer);
+                String contact_url = "sip:Android("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
+                ua = new UserAgent(sip, this.localIpAddress, contact_url, writer);
                 ua.listen();
         }
         

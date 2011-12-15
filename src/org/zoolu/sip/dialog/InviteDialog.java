@@ -31,6 +31,8 @@ import org.zoolu.sip.header.*;
 import org.zoolu.sip.provider.*;
 import org.zoolu.tools.LogLevel;
 
+import android.util.Log;
+
 import com.columbia.ng911.Geolocation;
 
 
@@ -190,7 +192,9 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
                    else contact_url=new NameAddress(new SipURL(contact,sip_provider.getViaAddress(),sip_provider.getPort()));
            }
            else contact_url=from_url;
-
+           
+           //Log.e("SIPCONTROLLER", "caller - " + caller + "contact? " + contact);
+           //Log.e("SIPCONTROLLER", "From URL - " + from_url);
            /* Original MJSIP Invite */
            Message invite;
            if (Geolocation.getIsUpdated()) {
@@ -212,8 +216,13 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
                body = body + pidflo + "\r\n\r\n--boundary1=--\r\n";
 
                invite.setBody("multipart/mixed; boundary=\"boundary1=\"", body);
+               
+               Header h0 = new Header("From", "<" + contact + ">");
+       		   invite.addHeaderAfter(h0, "To");
            } else {
         	   invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
+        	   Header h0 = new Header("From", "<" + contact + ">");
+       		   invite.addHeaderAfter(h0, "To");
            }
 
            // do invite
