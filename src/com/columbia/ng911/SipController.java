@@ -44,6 +44,8 @@ public class SipController {
         private int defaultIncomingPort = 5060;
         private boolean isRealTime = true;
         
+        private boolean isRTTconnected = false;
+        
         SipController(String serverID, String ipAddress, String port, T140Writer writer) {
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 0;
@@ -69,15 +71,23 @@ public class SipController {
         }
         
         public void call() {
+        	ua.hangup();
         	ua.call(this.serverIpAddress, this.serverPort);
+        	isRTTconnected = true;
         }
         
         public void hangup() {
         	ua.hangup();
+        	isRTTconnected = false;
         }
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
+        	if (!isRTTconnected && isRealTime) {
+        		this.call();
+        	} else if (!isRealTime) {
+        		this.hangup();
+        	}
         }
         
         public boolean isRealTime() {

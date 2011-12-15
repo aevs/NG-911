@@ -31,6 +31,8 @@ import org.zoolu.sip.header.*;
 import org.zoolu.sip.provider.*;
 import org.zoolu.tools.LogLevel;
 
+import com.columbia.ng911.Geolocation;
+
 
 /** Class InviteDialog can be used to manage invite dialogs.
   * An InviteDialog can be both client or server.
@@ -190,55 +192,29 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
            else contact_url=from_url;
 
            /* Original MJSIP Invite */
-           Message invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
-           /* End of Original MJSIP Invite */
+           Message invite;
+           if (Geolocation.getIsUpdated()) {
+        	   String localIpAddress = sip_provider.getViaAddress();
+               String pidflo = Geolocation.getGeolocation();
+               String body = "--boundary1\r\nContent-Type:application/sdp\r\n\r\n";
 
-           /*
-           String localIpAddress = sip_provider.getViaAddress();
-           String pidflo = "Content-Type: application/pidf+xml\r\n"
-                   +"Content-ID: <Android@"+localIpAddress+">\r\n"
-                   +"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                   +"<presence xmlns=\"urn:ietf:params:xml:ns:pidf\""
-                   +"xmlns:dm=\"urn:ietf:params:xml:ns:pidf:data-model\""
-                   +"xmlns:gp=\"urn:ietf:params:xml:ns:pidf:geopriv10\""
-                   +"xmlns:cl=\"urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr\""
-                   +"xmlns:gml=\"http://www.opengis.net/gml\""
-                   +"entity=\"pres:Android@"+localIpAddress+">"
-                   +"<dm:device id=\"point2d\">"
-                   +"<gp:geopriv>"
-                   +"<gp:location-info>"
-                   +"<gml:Point srsName=\"urn:ogc:def:crs:EPSG::4326\">"
-                   +"<gml:pos>"		+ "-34.407 150.883" // TODO - get value from Device 
-                   +"</gml:pos>"
-                   +"</gml:Point>"
-                   +"</gp:location-info>"
-                   +"<gp:usage-rules/>"
-                   +"<gp:method>"		+ "802.11" // TODO - get value from Device
-                   +"</gp:method>"
-                   +"</gp:geopriv>"
-                   +"<dm:deviceID>"	+ "mac:1234567890ab" // TODO - get value from Device
-                   +"</dm:deviceID>"
-                   +"<dm:timestamp>" 	+ "2011-11-22T20:57:29Z" // TODO - get value from Device
-                   +"</dm:timestamp>"
-                   +"</dm:device>"
-                   +"</presence>";
-           String body = "--boundary1\r\nContent-Type:application/sdp\r\n\r\n";
+               invite=MessageFactory.createInviteRequest(sip_provider, request_uri, to_url, from_url, contact_url, session_descriptor);
 
-           Message invite=MessageFactory.createInviteRequest(sip_provider, request_uri, to_url, from_url, contact_url, session_descriptor);
+               Header h1 = new Header("Geolocation","<cid:Android@"+localIpAddress+">");
+               invite.addHeaderAfter(h1, "Call-ID");
+               Header h2 = new Header("Geolocation-Routing", "yes");
+               invite.addHeaderAfter(h2, "Geolocation");
+               Header h3 = new Header("Accept", "text/plain, application/pidf+xml");
+               invite.addHeaderAfter(h3, "Geolocation-Routing");
 
-           Header h1 = new Header("Geolocation","<cid:Android@"+localIpAddress+">");
-           invite.addHeaderAfter(h1, "Call-ID");
-           Header h2 = new Header("Geolocation-Routing", "yes");
-           invite.addHeaderAfter(h2, "Geolocation");
-           Header h3 = new Header("Accept", "text/plain, application/pidf+xml");
-           invite.addHeaderAfter(h3, "Geolocation-Routing");
+               body = body + session_descriptor;
+               body = body + "\r\n--boundary1=\r\n";
+               body = body + pidflo + "\r\n\r\n--boundary1=--\r\n";
 
-           body = body + session_descriptor;
-           body = body + "\r\n--boundary1\r\n";
-           body = body + pidflo + "\r\n\r\n--boundary1--\r\n";
-
-           invite.setBody("multipart/mixed; boundary=\"boundary1\"", body);
-           */
+               invite.setBody("multipart/mixed; boundary=\"boundary1=\"", body);
+           } else {
+        	   invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
+           }
 
            // do invite
            invite(invite);

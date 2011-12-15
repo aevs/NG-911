@@ -17,12 +17,11 @@
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
 			android:orientation="horizontal">
 			<RadioButton android:layout_height="wrap_content"
-				android:text="Real-time" android:id="@+id/RTP" android:layout_width="wrap_content"
-				android:checked="true">
+				android:text="Real-time" android:id="@+id/RTP" android:layout_width="wrap_content">
 			</RadioButton>
 			<RadioButton android:layout_height="wrap_content"
 				android:text="Instant" android:id="@+id/SIMPLE"
-				android:layout_width="wrap_content">
+				android:layout_width="wrap_content" android:checked="true">
 			</RadioButton>
 		</RadioGroup>
 		<ImageButton android:layout_width="60dp" android:id="@+id/sendPhotoButton"
