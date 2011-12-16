@@ -76,23 +76,29 @@ public class SipController {
         }
         
         public void call() {
-        	ua.hangup();
-        	ua.call(this.serverIpAddress, this.serverPort);
-        	isRTTconnected = true;
+        	if (isRTTconnected == false) {
+	        	ua.hangup();
+	        	ua.call(this.serverIpAddress, this.serverPort);
+	        	isRTTconnected = true;
+        	}
         }
         
         public void hangup() {
-        	ua.hangup();
-        	isRTTconnected = false;
+        	if (isRTTconnected) {
+	        	ua.hangup();
+	        	isRTTconnected = false;
+        	}
         }
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
+        	/*
         	if (!isRTTconnected && isRealTime) {
         		this.call();
         	} else if (!isRealTime) {
         		this.hangup();
         	}
+        	*/
         }
         
         public boolean isRealTime() {
@@ -115,7 +121,7 @@ public class SipController {
         */
         
         public void sendRTT(char in) {
-        	if (isRealTime == true)
+        	if (isRealTime == true && isRTTconnected == true)
         		ua.sendRTT(in);
         }
 

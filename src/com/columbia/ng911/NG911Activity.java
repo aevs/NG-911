@@ -107,6 +107,7 @@ public class NG911Activity extends Activity {
 	LocationManager locationManager;
 	ConnectivityManager connectivityManager;
 	Location location;
+	public boolean isConnected;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -291,6 +292,19 @@ public class NG911Activity extends Activity {
 		sendMessageEditText.addTextChangedListener(rttTextWatcher);
 	}
 
+	class RTTAutoConnectThread implements Runnable {
+		public void run() {
+			while (isConnected == false || sipController == null) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					Log.e("RTTAuto", "Thread Sleep Error");
+				}
+			}
+			sipController.call();
+		}
+	}
+	
 	private void alertIfNoNetwork() {
 		NetworkInfo[] networkInfoTrial = connectivityManager
 				.getAllNetworkInfo();
@@ -306,8 +320,10 @@ public class NG911Activity extends Activity {
 			// AlertDialog connectedToNetwork=new
 			// AlertDialog(getBaseContext(),false,);
 			showAlertDialog("No Network Connectivity");
-
 		}
+		
+		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
+		rttAutoConnectThread.start();
 	}
 
 	/**********
@@ -615,6 +631,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
+		sipController.hangup();
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
@@ -622,6 +639,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
+		sipController.call();
 		super.onResume();
 	}
 
