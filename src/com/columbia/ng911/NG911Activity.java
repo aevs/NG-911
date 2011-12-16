@@ -270,13 +270,12 @@ public class NG911Activity extends Activity {
 					// sipController.send(inputMessage);
 
 					//If else condition redundant since send button not displayed in RTT mode
-					if (sipController.isRealTime())
-						sipController.sendRTT(T140Constants.CR_LF);
-					else{
+//					if (sipController.isRealTime())
+//						sipController.sendRTT(T140Constants.CR_LF);
+//					else{
 						sip.send(inputMessage);
-//						messagesList.add(inputMessage);
 						customArrayAdapter.add("Me: "+inputMessage,FLAG_MESSAGE_FROM_USER);
-					}
+//					}
 					tv.setText("");
 				}
 			}

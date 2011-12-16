@@ -10,6 +10,7 @@
 		android:paddingTop="10dp" android:id="@+id/rttResponseWindow"
 		android:layout_height="@android:dimen/thumbnail_height"
 		android:background="@android:drawable/alert_light_frame" android:hint="RTT message from Psap server"
+		android:visibility="invisible"
 		android:textSize="15dp" />
 	<RelativeLayout android:layout_width="wrap_content"
 		android:layout_height="wrap_content">
