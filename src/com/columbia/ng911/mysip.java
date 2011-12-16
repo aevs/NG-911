@@ -115,18 +115,18 @@ public class mysip implements SipProviderListener {
 
 //		To be used for sending the Correct header to PSAP
 
-//		SharedPreferences prefs = PreferenceManager
-//				.getDefaultSharedPreferences(NG911.getApplicationContext());
-//		String phoneNumber = prefs.getString(NG911Activity.USER_PHONE,
-//				"undefined");
-//		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
-//		Header h0 = new Header("From", userName+" <tel:"+phoneNumber+">;tag=" + tag);
-//		msg.addHeaderAfter(h0, "To");
+		SharedPreferences prefs = PreferenceManager
+				.getDefaultSharedPreferences(NG911.getApplicationContext());
+		String phoneNumber = prefs.getString(NG911Activity.USER_PHONE,
+				"undefined");
+		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
+		Header h0 = new Header("From", userName+" <tel:"+phoneNumber+">;tag=" + tag);
+		msg.addHeaderAfter(h0, "To");
 
 		//Comment when server accepts userName
-		Header h0 = new Header("From", "<sip:android@" + ip + ":"
-				+ sip.getPort() + ">;tag=" + tag);
-		msg.addHeaderAfter(h0, "To");
+//		Header h0 = new Header("From", "<sip:android@" + ip + ":"
+//				+ sip.getPort() + ">;tag=" + tag);
+//		msg.addHeaderAfter(h0, "To");
 
 
 //		Header h1 = new Header("Contact", "<sip:" + "phoneNumber" + "@" + ip

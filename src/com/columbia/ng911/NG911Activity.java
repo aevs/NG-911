@@ -1,23 +1,21 @@
 package com.columbia.ng911;
 
-import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.zoolu.sip.provider.SipStack;
 
 import se.omnitor.protocol.t140.T140Constants;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -27,7 +25,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
@@ -39,9 +36,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.OpenableColumns;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -50,7 +47,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.widget.ArrayAdapter;
@@ -208,7 +204,7 @@ public class NG911Activity extends Activity {
 				// TODO Auto-generated method stub
 				super.handleMessage(msg);
 				String incomingMessage = (String) msg.obj;
-//				Toast.makeText(NG911Activity.this,incomingMessage+" : failed", Toast.LENGTH_LONG).show();
+				Toast.makeText(NG911Activity.this,incomingMessage+" : failed", Toast.LENGTH_LONG).show();
 				customArrayAdapter.add("Sending failed: "+ incomingMessage,FLAG_MESSAGE_FROM_USER);
 			}
 		};
@@ -322,7 +318,7 @@ public class NG911Activity extends Activity {
 		}
 		
 		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
-		rttAutoConnectThread.start();
+//		rttAutoConnectThread.start();
 	}
 
 	/**********
@@ -371,8 +367,15 @@ public class NG911Activity extends Activity {
 						// If text fields are blank, retrieve and store value
 						// from device
 						if (userName.getText().toString().equals("")) {
+//								Set email id as default
+//							sharedPrefsEditor.putString(USER_NAME,
+//									getAccountName());
+
+							//Set undefined as default
 							sharedPrefsEditor.putString(USER_NAME,
-									getAccountName());
+									"user");
+
+							
 						} else {
 							sharedPrefsEditor.putString(USER_NAME, userName
 									.getText().toString());
@@ -494,8 +497,8 @@ public class NG911Activity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
-		if (data != null) {
-			if (!data.getExtras().isEmpty()) {
+//		if (data != null) {
+//			if (!data.getExtras().isEmpty()) {
 				if (requestCode == PHOTO_RESULT) {
 
 					Bitmap photoResult = (Bitmap) data.getExtras().get("data");
@@ -508,6 +511,15 @@ public class NG911Activity extends Activity {
 				if (requestCode == IMAGE_RECEIVED_RESULT) {
 					// byte[] jpegByteArray=(byte[])
 					// data.getExtras().get(CameraCapture.JPEG_STRING);
+			
+					
+					byte[] imageBytes = JpegImage.imageBytes;
+					Log.e("NG911 byte length",""+imageBytes.length);
+					String imageString = new String(imageBytes);
+					Log.e("NG911 image String byte length" ,""+ imageString.getBytes().length);
+					Log.e("Image String final: ", imageString);
+					sip.sendImage(imageString);
+/*					
 					Uri uri = (Uri) data.getExtras().get(
 							CameraCapture.JPEG_STRING);
 					try {
@@ -525,7 +537,7 @@ public class NG911Activity extends Activity {
 							sb.append(read);
 						}
 						String jpegString = sb.toString();
-
+						
 						sip.sendImage(jpegString);
 
 						Log.e(TAG, "jpegString is: " + jpegString);
@@ -538,6 +550,9 @@ public class NG911Activity extends Activity {
 					}
 					Log.e(TAG, "Received image result from cameraCapture class");
 
+*/					
+					
+					
 					// Bitmap pictureTaken =
 					// BitmapFactory.decodeByteArray(jpegByteArray, 0,
 					// jpegByteArray.length);
@@ -549,10 +564,54 @@ public class NG911Activity extends Activity {
 					// setContentView(imageView);
 
 				}
-			}
-		}
+//			}
+//		}
 	}
 
+	
+	
+	public static byte[] getBytesFromFile(String fileName) throws IOException {
+	    
+//		FileInputStream fis=openFileInput()
+		File file = new File(fileName);
+		InputStream is = new FileInputStream(file);
+
+
+	    // Get the size of the file
+	    long length = file.length();
+	    Log.e("File Length: ",""+length);
+	    // You cannot create an array using a long type.
+	    // It needs to be an int type.
+	    // Before converting to an int type, check
+	    // to ensure that file is not larger than Integer.MAX_VALUE.
+	    if (length > Integer.MAX_VALUE) {
+	        // File is too large
+	    }
+
+	    // Create the byte array to hold the data
+	    byte[] bytes = new byte[(int)length];
+
+	    // Read in the bytes
+	    int offset = 0;
+	    int numRead = 0;
+	    while (offset < bytes.length
+	           && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+	        offset += numRead;
+	    }
+
+	    // Ensure all the bytes have been read in
+	    if (offset < bytes.length) {
+	        throw new IOException("Could not completely read file "+file.getName());
+	    }
+
+	    // Close the input stream and return bytes
+	    is.close();
+	    return bytes;
+	}
+	
+	
+	
+	
 	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
@@ -630,7 +689,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
-		sipController.hangup();
+//		sipController.hangup();
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
@@ -638,7 +697,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
-		sipController.call();
+//		sipController.call();
 		super.onResume();
 	}
 

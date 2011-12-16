@@ -1,27 +1,18 @@
 package com.columbia.ng911;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.List;
 
 import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore.Images;
-import android.provider.MediaStore.Images.Media;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -29,12 +20,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 public class CameraCapture extends Activity {
 
+	
+	
+	
 	protected static final String JPEG_STRING = "jpegString";
 	private static String TAG = "CameraCapture";
 	private Preview mPreview;
@@ -43,6 +36,7 @@ public class CameraCapture extends Activity {
 
 	private ImageButton takePictureButton = null;
 
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -101,37 +95,39 @@ public class CameraCapture extends Activity {
 	PictureCallback jpegCallback = new PictureCallback() {
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
+			JpegImage.setImageBytes(data);
+			
+//			Log.e(TAG + " onPictureTaken()", "Jpeg data is:********* "
+//					+ jpegString + " ************");
 
-			String jpegString = new String(data);
-			Log.e(TAG + " onPictureTaken()", "Jpeg data is:********* "
-					+ jpegString + " ************");
-
+		
+			
 			
 			// Display on screen..send to LoSt server
-			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
-					data.length);
-
-			ContentValues contentValues = new ContentValues();
-			contentValues.put(Images.Media.TITLE, "image");
-
-			Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
-					contentValues);
-
-			OutputStream outputStream;
-			try {
-				outputStream = getContentResolver().openOutputStream(uri);
-				boolean compressed = pictureTaken.compress(
-						Bitmap.CompressFormat.JPEG, 20, outputStream);
-				Log.e(TAG, "picture successfully compressed at:" + uri
-						+ compressed);
-				outputStream.close();
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
+//					data.length);
+//
+//			ContentValues contentValues = new ContentValues();
+//			contentValues.put(Images.Media.TITLE, "image");
+//
+//			Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
+//					contentValues);
+//
+//			OutputStream outputStream;
+//			try {
+//				outputStream = getContentResolver().openOutputStream(uri);
+//				boolean compressed = pictureTaken.compress(
+//						Bitmap.CompressFormat.JPEG, 20, outputStream);
+//				Log.e(TAG, "picture successfully compressed at:" + uri
+//						+ compressed);
+//				outputStream.close();
+//			} catch (FileNotFoundException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 
 			// Log.e(TAG+
 			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
@@ -142,7 +138,7 @@ public class CameraCapture extends Activity {
 			Log.e(TAG, "jpeg data length " + data.length);
 
 			Intent intent = new Intent();
-			intent.putExtra(CameraCapture.JPEG_STRING, uri);
+//			intent.putExtra(CameraCapture.JPEG_STRING, uri);
 			setResult(NG911Activity.IMAGE_RECEIVED_RESULT, intent);
 			finish();
 

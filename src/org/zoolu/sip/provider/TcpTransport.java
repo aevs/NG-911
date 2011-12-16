@@ -26,6 +26,11 @@ package org.zoolu.sip.provider;
 
 import org.zoolu.net.*;
 import org.zoolu.sip.message.Message;
+
+import com.columbia.ng911.JpegImage;
+
+import android.util.Log;
+
 import java.io.IOException;
 
 
@@ -112,7 +117,29 @@ class TcpTransport implements ConnectedTransport, TcpConnectionListener
    {  if (tcp_conn!=null)
       {  last_time=System.currentTimeMillis();
          byte[] data=msg.toString().getBytes();
-         tcp_conn.send(data);
+         Log.e("Final Message: ", msg.toString());
+         
+
+         int endindex  = msg.toString().indexOf("image/jpeg")+10;
+         String headers = msg.toString().substring(0,endindex)+"\n \n";
+         byte[] headerBytes = headers.getBytes();
+         byte[] imageBytes = JpegImage.imageBytes;
+         
+         byte[] finalBytes = new byte[headerBytes.length+imageBytes.length];
+        
+         for(int i=0;i<headerBytes.length;i++){
+        	 finalBytes[i] = headerBytes[i];
+         }
+         int j=0;
+         for(int i=headerBytes.length;i<(headerBytes.length+imageBytes.length);i++){
+        	 finalBytes[i]=imageBytes[j];
+        	 j++;
+         }
+         
+//         Log.e("ImageBytes: ", "Length:"+String.valueOf(finalBytes[finalBytes.length])+"read:"+String.valueOf(imageBytes[imageBytes.length]));
+         Log.e("Header Message: ",headers);
+//         tcp_conn.send(data);
+         tcp_conn.send(finalBytes);
       }
    }
 
