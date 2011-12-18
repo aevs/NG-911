@@ -124,6 +124,7 @@ public class NG911Activity extends Activity {
 
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		Log.e("onCreate()","called");
 		alertIfNoNetwork();
 
 		/*******************************************
@@ -205,7 +206,7 @@ public class NG911Activity extends Activity {
 				super.handleMessage(msg);
 				String incomingMessage = (String) msg.obj;
 				Toast.makeText(NG911Activity.this,incomingMessage+" : failed", Toast.LENGTH_LONG).show();
-				customArrayAdapter.add("Sending failed: "+ incomingMessage,FLAG_MESSAGE_FROM_USER);
+				customArrayAdapter.addErrorMessage("Sending failed: "+ incomingMessage);
 			}
 		};
 		
@@ -518,7 +519,17 @@ public class NG911Activity extends Activity {
 					String imageString = new String(imageBytes);
 					Log.e("NG911 image String byte length" ,""+ imageString.getBytes().length);
 					Log.e("Image String final: ", imageString);
-					sip.sendImage(imageString);
+					
+					
+					try {
+						sip.sendImage(imageString);
+						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
+						Log.e(TAG,"image sent*****");
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						customArrayAdapter.addErrorMessage("Error Sending Image");
+					}
 /*					
 					Uri uri = (Uri) data.getExtras().get(
 							CameraCapture.JPEG_STRING);
@@ -689,7 +700,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
-//		sipController.hangup();
+		sipController.hangup();
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}

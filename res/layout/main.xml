@@ -5,7 +5,7 @@
 	android:weightSum="1">
 	<ListView android:id="@+id/chatListView" android:layout_width="fill_parent"
 		android:stackFromBottom="true" android:transcriptMode="alwaysScroll"
-		android:layout_weight="1" android:layout_height="300dp" />
+			android:layout_weight="1" android:layout_height="300dp" />
 	<TextView android:layout_width="fill_parent"
 		android:paddingTop="10dp" android:id="@+id/rttResponseWindow"
 		android:layout_height="@android:dimen/thumbnail_height"

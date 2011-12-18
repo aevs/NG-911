@@ -5,8 +5,9 @@
   android:textSize="20dp"
   android:textColor="@android:color/black"
   android:id="@+id/adapterUnitText911"
+      android:gravity="right"
   android:paddingLeft="10dp"
   android:layout_marginRight="20dp"
-  android:layout_width="fill_parent"
+  android:layout_width="wrap_content"
   android:layout_height="wrap_content">
 </TextView>
