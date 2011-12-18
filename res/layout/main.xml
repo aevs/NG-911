@@ -10,7 +10,6 @@
 		android:paddingTop="10dp" android:id="@+id/rttResponseWindow"
 		android:layout_height="@android:dimen/thumbnail_height"
 		android:background="@android:drawable/alert_light_frame" android:hint="RTT message from Psap server"
-		android:visibility="invisible"
 		android:textSize="15dp" />
 	<RelativeLayout android:layout_width="wrap_content"
 		android:layout_height="wrap_content">
@@ -18,11 +17,12 @@
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
 			android:orientation="horizontal">
 			<RadioButton android:layout_height="wrap_content"
-				android:text="Real-time" android:id="@+id/RTP" android:layout_width="wrap_content">
+				android:text="Real-time" android:id="@+id/RTP" android:layout_width="wrap_content"
+				android:checked="true">
 			</RadioButton>
 			<RadioButton android:layout_height="wrap_content"
 				android:text="Instant" android:id="@+id/SIMPLE"
-				android:layout_width="wrap_content" android:checked="true">
+				android:layout_width="wrap_content">
 			</RadioButton>
 		</RadioGroup>
 		<ImageButton android:layout_width="60dp" android:id="@+id/sendPhotoButton"
@@ -34,7 +34,7 @@
 		<Button android:layout_width="wrap_content" android:id="@+id/sendMessageButton"
 			android:layout_below="@id/sendPhotoButton" android:layout_height="wrap_content"
 			android:layout_alignParentRight="true"
-			android:text="Send">
+			android:text="Send" android:visibility="invisible">
 		</Button>
 		<EditText android:id="@+id/message" android:layout_height="wrap_content"
 			android:layout_below="@id/sendPhotoButton" 
