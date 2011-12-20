@@ -98,6 +98,7 @@ public class NG911Activity extends Activity {
 	
 	
 	private ListView chatWindowListView;
+	private TextView rttResponseTextView;
 
 	/** Called when the activity is first created. */
 	LocationManager locationManager;
@@ -111,6 +112,9 @@ public class NG911Activity extends Activity {
 		setContentView(R.layout.main);
 		SipStack.debug_level = 0;
 
+		rttResponseTextView=(TextView)findViewById(R.id.rttResponseWindow);
+		
+		
 		/**********************
 		 * 
 		 * Request for user data only the first time
@@ -173,6 +177,7 @@ public class NG911Activity extends Activity {
 			@Override
 			public void handleMessage(Message msg) {
 				String incomingMessage = (String) msg.obj;
+				
 				customArrayAdapter.add("Me: " + incomingMessage,FLAG_MESSAGE_FROM_USER);
 				sendMessageEditText.setText("");
 				sipController.sendRTT(T140Constants.CR_LF);
@@ -239,10 +244,15 @@ public class NG911Activity extends Activity {
 
 				t140IncomingBuffer.append(Character.toString(c));
 				tmp = t140IncomingCharSeq.toString();
-				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
-
-				if ((int) msg.arg1 == 13) // \n case
+				
+//				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
+				rttResponseTextView.append(tmp);
+				
+				if ((int) msg.arg1 == 13){ // \n case
 					t140IncomingBuffer.setLength(0);
+					customArrayAdapter.add(rttResponseTextView.getText().toString(),FLAG_MESSAGE_FROM_911);
+					rttResponseTextView.setText("");
+				}
 
 				Log.e("T140Incoming", Integer.toString(msg.arg1));
 			}
