@@ -246,7 +246,7 @@ public class NG911Activity extends Activity {
 				tmp = t140IncomingCharSeq.toString();
 				
 //				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
-				rttResponseTextView.append(tmp);
+				rttResponseTextView.setText(tmp);
 				
 				if ((int) msg.arg1 == 13){ // \n case
 					t140IncomingBuffer.setLength(0);
