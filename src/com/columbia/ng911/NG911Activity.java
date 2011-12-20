@@ -113,7 +113,7 @@ public class NG911Activity extends Activity {
 		SipStack.debug_level = 0;
 
 		rttResponseTextView=(TextView)findViewById(R.id.rttResponseWindow);
-		
+
 		
 		/**********************
 		 * 
@@ -129,7 +129,7 @@ public class NG911Activity extends Activity {
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		Log.e("onCreate()","called");
-		alertIfNoNetwork();
+//		alertIfNoNetwork();
 
 		/*******************************************
 		 * Real Time Text or Normal Radio Button
@@ -300,7 +300,7 @@ public class NG911Activity extends Activity {
 
 	class RTTAutoConnectThread implements Runnable {
 		public void run() {
-			while (isConnected == false || sipController == null) {
+			while ( sipController == null) {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
@@ -329,7 +329,7 @@ public class NG911Activity extends Activity {
 		}
 		
 		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
-//		rttAutoConnectThread.start();
+		rttAutoConnectThread.start();
 	}
 
 	/**********
@@ -710,7 +710,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
-		sipController.hangup();
+//		sipController.hangup();
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
