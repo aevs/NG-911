@@ -147,7 +147,7 @@ public class T140Panel implements T140EventHandler {
     	try {
 	    	System.out.println("Receiving [8]: BS");
 	    	//out.write(call_id+" BS\n");
-	    	out.write(0x08);
+		out.write(0x08);
 	    	out.flush();
 	    	
 	    	// If BS is received, delete the latest received in receive_buffer
