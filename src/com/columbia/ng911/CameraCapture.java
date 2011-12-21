@@ -1,18 +1,24 @@
 package com.columbia.ng911;
 
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.Media;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -128,14 +134,14 @@ public class CameraCapture extends Activity {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
-
-			// Log.e(TAG+
-			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
-			// ImageView imageView = new ImageView(getApplicationContext());
-			// imageView.setImageBitmap(pictureTaken);
-			// setContentView(imageView);
-
-			Log.e(TAG, "jpeg data length " + data.length);
+//
+//			// Log.e(TAG+
+//			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
+//			// ImageView imageView = new ImageView(getApplicationContext());
+//			// imageView.setImageBitmap(pictureTaken);
+//			// setContentView(imageView);
+//
+//			Log.e(TAG, "jpeg data length " + data.length);
 
 			Intent intent = new Intent();
 //			intent.putExtra(CameraCapture.JPEG_STRING, uri);

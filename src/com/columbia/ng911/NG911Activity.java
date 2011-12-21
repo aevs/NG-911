@@ -504,6 +504,7 @@ public class NG911Activity extends Activity {
 		return super.onCreateOptionsMenu(menu);
 	}
 
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
@@ -531,6 +532,7 @@ public class NG911Activity extends Activity {
 					Log.e("Image String final: ", imageString);
 					
 					
+					
 					try {
 						sip.sendImage(imageString);
 						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
@@ -540,8 +542,8 @@ public class NG911Activity extends Activity {
 						e.printStackTrace();
 						customArrayAdapter.addErrorMessage("Error Sending Image");
 					}
-/*					
-					Uri uri = (Uri) data.getExtras().get(
+					
+/*					Uri uri = (Uri) data.getExtras().get(
 							CameraCapture.JPEG_STRING);
 					try {
 						InputStream is = getContentResolver().openInputStream(
@@ -591,11 +593,13 @@ public class NG911Activity extends Activity {
 
 	
 	
-	public static byte[] getBytesFromFile(String fileName) throws IOException {
+	public  byte[] getBytesFromFile(Uri uri) throws IOException {
 	    
 //		FileInputStream fis=openFileInput()
-		File file = new File(fileName);
+		File file= new File(uri.getEncodedPath());
 		InputStream is = new FileInputStream(file);
+//		InputStream is = getContentResolver().openInputStream(
+//				uri);
 
 
 	    // Get the size of the file

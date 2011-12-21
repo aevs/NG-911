@@ -120,8 +120,12 @@ class TcpTransport implements ConnectedTransport, TcpConnectionListener
          Log.e("Final Message: ", msg.toString());
          
 
+         
          int endindex  = msg.toString().indexOf("image/jpeg")+10;
          String headers = msg.toString().substring(0,endindex)+"\n \n";
+         Log.e("Initial Header:",headers);
+         
+         
          byte[] headerBytes = headers.getBytes();
          byte[] imageBytes = JpegImage.imageBytes;
          
@@ -137,8 +141,9 @@ class TcpTransport implements ConnectedTransport, TcpConnectionListener
          }
          
 //         Log.e("ImageBytes: ", "Length:"+String.valueOf(finalBytes[finalBytes.length])+"read:"+String.valueOf(imageBytes[imageBytes.length]));
-         Log.e("Header Message: ",headers);
+         Log.e("Modified headers: ",headers);
 //         tcp_conn.send(data);
+         Log.e("TCPTransport: ","Total Image length="+finalBytes.length);
          tcp_conn.send(finalBytes);
       }
    }
