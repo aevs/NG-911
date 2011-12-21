@@ -47,6 +47,7 @@ public class SipController {
         private boolean isRTTconnected = false;
         
         private String phoneNumber;
+        char prevChar;
         
         SipController(String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
                 SipStack.log_path = "/data/misc/tmp/";
@@ -69,6 +70,7 @@ public class SipController {
                 String contact_url = "sip:Android("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
                 ua = new UserAgent(sip, this.localIpAddress, contact_url, writer);
                 ua.listen();
+                prevChar = 0;
         }
         
         public SipProvider getSharedSipProvider() {
@@ -119,8 +121,10 @@ public class SipController {
         */
         
         public void sendRTT(char in) {
-        	if (isRealTime == true && isRTTconnected == true)
+        	if (isRealTime == true && isRTTconnected == true) {
         		ua.sendRTT(in);
+        	}
+        		
         }
 
         public String getLocalIpAddress() { 

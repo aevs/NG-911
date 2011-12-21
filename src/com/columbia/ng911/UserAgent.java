@@ -109,6 +109,7 @@ public class UserAgent extends CallListenerAdapter {
         }
         
         public void sendRTT(char in) {
+        	Log.e("UA", "RTT Sent [" + (int)in + "]");
         	appController.processInput(in);
         }
 

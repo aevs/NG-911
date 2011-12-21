@@ -72,6 +72,7 @@ public class NG911Activity extends Activity {
 	private Handler rttTimeOutHandler;
 	private Handler rttCompleteTextHandler;
 	private Handler messageNotSentHandler;
+	private Handler msgEditTextHandler;
 
 	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
@@ -180,7 +181,7 @@ public class NG911Activity extends Activity {
 				
 				customArrayAdapter.add("Me: " + incomingMessage,FLAG_MESSAGE_FROM_USER);
 				sendMessageEditText.setText("");
-				sipController.sendRTT(T140Constants.CR_LF);
+				sipController.sendRTT(T140Constants.LINE_FEED);
 				Log.e("MAIN INCOMING: ", incomingMessage);
 			}
 		};
@@ -229,6 +230,18 @@ public class NG911Activity extends Activity {
 		/********************************
 		 * SipController Initialize
 		 *******************************/
+		msgEditTextHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				int result = (int) msg.arg1;
+				EditText editText = (EditText)findViewById(R.id.message);
+				if (result == 1)
+					editText.setEnabled(true);
+				else
+					editText.setEnabled(false);
+			}
+		};
+		
 		t140Handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -242,13 +255,19 @@ public class NG911Activity extends Activity {
 //				else
 //					arrayAdapter.remove(tmp);
 
-				t140IncomingBuffer.append(Character.toString(c));
-				tmp = t140IncomingCharSeq.toString();
-				
-//				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
-				rttResponseTextView.setText(tmp);
-				
-				if ((int) msg.arg1 == 13){ // \n case
+				if (c == T140Constants.BACKSPACE) {
+					tmp = t140IncomingCharSeq.toString();
+					if (tmp.length() > 0)
+						t140IncomingBuffer.deleteCharAt(tmp.length() - 1);
+					tmp = t140IncomingCharSeq.toString();
+					rttResponseTextView.setText(tmp);
+				} else {
+					t140IncomingBuffer.append(Character.toString(c));
+					tmp = t140IncomingCharSeq.toString();
+					rttResponseTextView.setText(tmp);
+				}
+
+                if ((int) msg.arg1 == 13){ // \n case
 					t140IncomingBuffer.setLength(0);
 					customArrayAdapter.add(rttResponseTextView.getText().toString(),FLAG_MESSAGE_FROM_911);
 					rttResponseTextView.setText("");
@@ -300,13 +319,31 @@ public class NG911Activity extends Activity {
 
 	class RTTAutoConnectThread implements Runnable {
 		public void run() {
-			while ( sipController == null) {
+			Message msg = new Message();
+            msg.arg1 = 0;
+			msgEditTextHandler.sendMessage(msg);
+			
+			while (sipController == null) {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					Log.e("RTTAuto", "Thread Sleep Error");
 				}
 			}
+			
+			while (Geolocation.getIsUpdated() != true) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					Log.e("RTTAuto", "Thread Sleep Error");
+				}
+			}
+			
+			Message msg2 = new Message();
+			msg2.arg1 = 1;
+			msgEditTextHandler.sendMessage(msg2);
+			sipController.call();
+			sipController.hangup();
 			sipController.call();
 		}
 	}
@@ -839,8 +876,13 @@ public class NG911Activity extends Activity {
 			RadioButton rb=(RadioButton)findViewById(R.id.RTP);
 			if(rb.isChecked()){
 			// RTT send
-				if (count > 0)
-					sipController.sendRTT(s.charAt(start));
+				if (count > 0) {
+					if ((int)s.charAt(start) != 10)
+						sipController.sendRTT(s.charAt(start));
+					else
+						sipController.sendRTT('\r');
+				}
+					
 				
 				if(isTimerTaskScheduled){
 					timeOutTimer.cancel();
@@ -855,7 +897,7 @@ public class NG911Activity extends Activity {
 				if(sendMessageEditText.getLineCount()>1){
 
 					customArrayAdapter.add("User: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_USER);
-					sipController.sendRTT(T140Constants.CR_LF);
+					sipController.sendRTT(T140Constants.LINE_FEED);
 					sendMessageEditText.setText("");
 					
 				}else if(count>0&& String.valueOf(s.charAt(start)).equals(".")){
