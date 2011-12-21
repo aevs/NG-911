@@ -57,7 +57,7 @@ public class mysip implements SipProviderListener {
 		// sip.setDefaultTransport(SipProvider.PROTO_TCP);
 		// Log.e("SIP", sip.getDefaultTransport());
 		SipStack.debug_level = 0;
-		//Log.e("IP:", ip);
+		Log.e("IP:", ip);
 		// sip.addSipProviderListener(SipProvider.ANY, this);
 		sip.addSipProviderListener(SipProvider.ANY, this);
 		

@@ -23,7 +23,7 @@ public class Geolocation {
 		+"<gp:geopriv>"
 		+"<gp:location-info>"
 		+"<gml:Point srsName=\"urn:ogc:def:crs:EPSG::4326\">"
-		+"<gml:pos>"+lon+" "+lat+"</gml:pos>"
+		+"<gml:pos>"+lat+" "+lon+"</gml:pos>"
 	    +"</gml:Point>"
 	    +"</gp:location-info>"
 	    +"<gp:usage-rules/>"

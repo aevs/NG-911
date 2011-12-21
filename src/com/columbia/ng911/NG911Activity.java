@@ -72,6 +72,7 @@ public class NG911Activity extends Activity {
 	private Handler rttTimeOutHandler;
 	private Handler rttCompleteTextHandler;
 	private Handler messageNotSentHandler;
+	private Handler msgEditTextHandler;
 
 	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
@@ -80,14 +81,14 @@ public class NG911Activity extends Activity {
 	public static final String USER_PHONE = "userPhone";
 	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
-
+	
 	private final String EARTHQUAKE="Earthquake in the area";
 	private final String FIRE="Fire in the area, request fire engine";
 	private final String MEDICAL_EMERGENCY="Medical emergency, request ambulance";
 	private final String FLOOD="Flood alert";
 	private final String GUNSHOTS="Gunshots heard, request police assistance";
 	private final String ROAD_ACCIDENT="Road Accident, request ambulance";
-
+	
 	private final boolean FLAG_MESSAGE_FROM_USER=false;
 	private final boolean FLAG_MESSAGE_FROM_911=true;
 
@@ -95,8 +96,8 @@ public class NG911Activity extends Activity {
 
 	private ArrayAdapter<String> arrayAdapter;
 	private CustomArrayAdapter customArrayAdapter;
-
-
+	
+	
 	private ListView chatWindowListView;
 	private TextView rttResponseTextView;
 
@@ -114,49 +115,53 @@ public class NG911Activity extends Activity {
 
 		rttResponseTextView=(TextView)findViewById(R.id.rttResponseWindow);
 
-
+		
 		/**********************
 		 * 
 		 * Request for user data only the first time
 		 * 
 		 ************************/
 		SharedPreferences sharedPreferences = PreferenceManager
-			.getDefaultSharedPreferences(getApplicationContext());
+				.getDefaultSharedPreferences(getApplicationContext());
 		if (!sharedPreferences.getBoolean(USER_DATA_SAVED, false)) {
 			showAlertDialogForUserData();
 		}
 
 		connectivityManager = (ConnectivityManager) this
-			.getSystemService(Context.CONNECTIVITY_SERVICE);
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		Log.e("onCreate()","called");
+//		alertIfNoNetwork();
 
 		/*******************************************
 		 * Real Time Text or Normal Radio Button
 		 *******************************************/
 		RadioButton textTypeButton = (RadioButton) findViewById(R.id.RTP);
-		textTypeButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
-				if (arg1){
-					Log.e("RTT_BUTTON", "yes");
-					findViewById(R.id.rttResponseWindow).setVisibility(View.VISIBLE);
-					findViewById(R.id.sendMessageButton).setVisibility(View.INVISIBLE);
-				}
-				else{
-					findViewById(R.id.rttResponseWindow).setVisibility(View.INVISIBLE);
-					findViewById(R.id.sendMessageButton).setVisibility(View.VISIBLE);
-					Log.e("RTT_BUTTON", "no");
-				}
-			sipController.setIsRealTime(arg1);
-			}
-		});
+		textTypeButton
+				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+					public void onCheckedChanged(CompoundButton arg0,
+							boolean arg1) {
+						if (arg1){
+							Log.e("RTT_BUTTON", "yes");
+							findViewById(R.id.rttResponseWindow).setVisibility(View.VISIBLE);
+							findViewById(R.id.sendMessageButton).setVisibility(View.INVISIBLE);
+						}
+						else{
+							findViewById(R.id.rttResponseWindow).setVisibility(View.INVISIBLE);
+							findViewById(R.id.sendMessageButton).setVisibility(View.VISIBLE);
+							Log.e("RTT_BUTTON", "no");
+						}
+						sipController.setIsRealTime(arg1);
+					}
+				});
 
 		// initialise array Adapter
 		arrayAdapter = new ArrayAdapter<String>(this, R.layout.adapterunituser);
 		customArrayAdapter= new CustomArrayAdapter(getApplicationContext(), R.id.adapterUnitText911);
-
+		
+		
 		chatWindowListView = (ListView) findViewById(R.id.chatListView);
 		chatWindowListView.setAdapter(customArrayAdapter);
-
+		
 		/*******************************************
 		 * 
 		 * Camera button
@@ -173,10 +178,10 @@ public class NG911Activity extends Activity {
 			@Override
 			public void handleMessage(Message msg) {
 				String incomingMessage = (String) msg.obj;
-
+				
 				customArrayAdapter.add("Me: " + incomingMessage,FLAG_MESSAGE_FROM_USER);
 				sendMessageEditText.setText("");
-				sipController.sendRTT(T140Constants.CR_LF);
+				sipController.sendRTT(T140Constants.LINE_FEED);
 				Log.e("MAIN INCOMING: ", incomingMessage);
 			}
 		};
@@ -185,19 +190,22 @@ public class NG911Activity extends Activity {
 		 * 
 		 *************************/
 		rttCompleteTextHandler = new Handler(){
+
 			@Override
 			public void handleMessage(Message msg) {
 				// TODO Auto-generated method stub
 				Toast.makeText(getApplicationContext(), "Please complete text..", Toast.LENGTH_LONG).show();	
-
+				
 			}
+			
 		};
-
+		
 		/************
 		 * Sip message time out handler
 		 * 
 		 ************/
 		messageNotSentHandler =new Handler(){
+
 			@Override
 			public void handleMessage(Message msg) {
 				// TODO Auto-generated method stub
@@ -207,11 +215,13 @@ public class NG911Activity extends Activity {
 				customArrayAdapter.addErrorMessage("Sending failed: "+ incomingMessage);
 			}
 		};
-
+		
+		
 		sipHandler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
 				String incomingMessage = (String) msg.obj;
+//				arrayAdapter.add("\n Server: " + incomingMessage);
 				customArrayAdapter.add("911: " + incomingMessage,FLAG_MESSAGE_FROM_911);
 				Log.e("MAIN INCOMING: ", incomingMessage);
 			}
@@ -220,6 +230,18 @@ public class NG911Activity extends Activity {
 		/********************************
 		 * SipController Initialize
 		 *******************************/
+		msgEditTextHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				int result = (int) msg.arg1;
+				EditText editText = (EditText)findViewById(R.id.message);
+				if (result == 1)
+					editText.setEnabled(true);
+				else
+					editText.setEnabled(false);
+			}
+		};
+		
 		t140Handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -227,6 +249,11 @@ public class NG911Activity extends Activity {
 				String tmp = t140IncomingCharSeq.toString();
 				if (tmp.length() == 0)
 					t140IncomingBuffer.append("\n 911: ");
+				/************
+				 * Temporary buffer needs to be written to middle textBox
+				 */
+//				else
+//					arrayAdapter.remove(tmp);
 
 				if (c == T140Constants.BACKSPACE) {
 					tmp = t140IncomingCharSeq.toString();
@@ -240,15 +267,18 @@ public class NG911Activity extends Activity {
 					rttResponseTextView.setText(tmp);
 				}
 
-				if ((int) msg.arg1 == 13 || (int) msg.arg1 == 10){ // \n case
+                if ((int) msg.arg1 == 13){ // \n case
 					t140IncomingBuffer.setLength(0);
 					customArrayAdapter.add(rttResponseTextView.getText().toString(),FLAG_MESSAGE_FROM_911);
 					rttResponseTextView.setText("");
 				}
+
+				Log.e("T140Incoming", Integer.toString(msg.arg1));
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
-		sipController = new SipController("test", "128.59.22.88", "5080", t140writer, getDevicePhoneNumber());
+		sipController = new SipController("test", "128.59.22.88", "5080",
+				t140writer, getDevicePhoneNumber());
 
 		sip = new mysip(sipController.getSharedSipProvider(), this,
 				getLocalIpAddress(), sipHandler,messageNotSentHandler);
@@ -257,19 +287,31 @@ public class NG911Activity extends Activity {
 		Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
 		sendMessageButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+
 				// Intent for starting preview..does not take photos yet.
+
 				if (v.getId() == R.id.sendMessageButton) {
 					TextView tv = (TextView) findViewById(R.id.message);
 					String inputMessage = tv.getText().toString();
 
-					sip.send(inputMessage);
-					customArrayAdapter.add("Me: "+inputMessage,FLAG_MESSAGE_FROM_USER);
+					// sipController.send(inputMessage);
 
+					//If else condition redundant since send button not displayed in RTT mode
+//					if (sipController.isRealTime())
+//						sipController.sendRTT(T140Constants.CR_LF);
+//					else{
+						sip.send(inputMessage);
+						customArrayAdapter.add("Me: "+inputMessage,FLAG_MESSAGE_FROM_USER);
+//					}
 					tv.setText("");
 				}
 			}
 		});
 
+		/*
+		 * Jin : I moved these from onStart(), because onStart() called several
+		 * times after closing camera
+		 */
 		sendMessageEditText = (EditText) findViewById(R.id.message);
 		sendMessageEditText.setOnKeyListener(rttTextListener);
 		sendMessageEditText.addTextChangedListener(rttTextWatcher);
@@ -277,20 +319,38 @@ public class NG911Activity extends Activity {
 
 	class RTTAutoConnectThread implements Runnable {
 		public void run() {
-			while ( sipController == null) {
+			Message msg = new Message();
+            msg.arg1 = 0;
+			msgEditTextHandler.sendMessage(msg);
+			
+			while (sipController == null) {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					Log.e("RTTAuto", "Thread Sleep Error");
 				}
 			}
+			
+			while (Geolocation.getIsUpdated() != true) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					Log.e("RTTAuto", "Thread Sleep Error");
+				}
+			}
+			
+			Message msg2 = new Message();
+			msg2.arg1 = 1;
+			msgEditTextHandler.sendMessage(msg2);
+			sipController.call();
+			sipController.hangup();
 			sipController.call();
 		}
 	}
-
+	
 	private void alertIfNoNetwork() {
 		NetworkInfo[] networkInfoTrial = connectivityManager
-			.getAllNetworkInfo();
+				.getAllNetworkInfo();
 		boolean isConnected = false;
 		for (int i = 0; i < networkInfoTrial.length; i++) {
 			if (networkInfoTrial[i].isConnected()) {
@@ -304,7 +364,7 @@ public class NG911Activity extends Activity {
 			// AlertDialog(getBaseContext(),false,);
 			showAlertDialog("No Network Connectivity");
 		}
-
+		
 		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
 		rttAutoConnectThread.start();
 	}
@@ -314,9 +374,11 @@ public class NG911Activity extends Activity {
 	 * 
 	 */
 	private String getAccountName() {
-		AccountManager accountManager = AccountManager.get(getApplicationContext());
+		AccountManager accountManager = AccountManager
+				.get(getApplicationContext());
 		Account[] accounts = accountManager.getAccountsByType("com.google");
 		Log.e("Account NAME", " " + accounts[0].name);
+
 		return accounts[0].name;
 	}
 
@@ -325,81 +387,117 @@ public class NG911Activity extends Activity {
 	 * 
 	 */
 	private String getDevicePhoneNumber() {
+
 		TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 		Log.e("Telephone Number: ", "" + tm.getLine1Number());
 		return tm.getLine1Number();
 	}
 
 	private void showAlertDialogForUserData() {
-		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(NG911Activity.this);
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+				NG911Activity.this);
 		LayoutInflater factory = LayoutInflater.from(this);
 		final View userDataView = factory.inflate(R.layout.userdata, null);
 		alertDialogBuilder.setView(userDataView);
 		alertDialogBuilder.setTitle("User data");
-		alertDialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				EditText userName = (EditText) userDataView.findViewById(R.id.userName);
-				SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-				Editor sharedPrefsEditor = sharedPrefs.edit();
+		alertDialogBuilder.setPositiveButton("Save",
+				new DialogInterface.OnClickListener() {
 
-				// If text fields are blank, retrieve and store value
-				// from device
-				if (userName.getText().toString().equals(""))
-					//Set undefined as default
-					sharedPrefsEditor.putString(USER_NAME, "user");
-				else
-					sharedPrefsEditor.putString(USER_NAME, userName.getText().toString());
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
 
-				sharedPrefsEditor.putString(USER_PHONE, getDevicePhoneNumber());
-				sharedPrefsEditor.putBoolean(USER_DATA_SAVED, true);
-				sharedPrefsEditor.commit();
-			}
-		});
+						EditText userName = (EditText) userDataView
+								.findViewById(R.id.userName);
+						SharedPreferences sharedPrefs = PreferenceManager
+								.getDefaultSharedPreferences(getApplicationContext());
+						Editor sharedPrefsEditor = sharedPrefs.edit();
 
-		alertDialogBuilder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-				Editor sharedPrefsEditor = sharedPrefs.edit();
-				sharedPrefsEditor.putString(USER_NAME, getAccountName());
-				sharedPrefsEditor.putString(USER_PHONE, getDevicePhoneNumber());
-				sharedPrefsEditor.commit();
+						// If text fields are blank, retrieve and store value
+						// from device
+						if (userName.getText().toString().equals("")) {
+//								Set email id as default
+//							sharedPrefsEditor.putString(USER_NAME,
+//									getAccountName());
 
-				dialog.dismiss();
-			}
-		});
+							//Set undefined as default
+							sharedPrefsEditor.putString(USER_NAME,
+									"user");
+
+							
+						} else {
+							sharedPrefsEditor.putString(USER_NAME, userName
+									.getText().toString());
+						}
+							sharedPrefsEditor.putString(USER_PHONE,
+									getDevicePhoneNumber());
+						sharedPrefsEditor.putBoolean(USER_DATA_SAVED, true);
+						sharedPrefsEditor.commit();
+
+					}
+				});
+
+		alertDialogBuilder.setNegativeButton("Close",
+				new DialogInterface.OnClickListener() {
+
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+
+						SharedPreferences sharedPrefs = PreferenceManager
+								.getDefaultSharedPreferences(getApplicationContext());
+						Editor sharedPrefsEditor = sharedPrefs.edit();
+						sharedPrefsEditor
+								.putString(USER_NAME, getAccountName());
+						sharedPrefsEditor.putString(USER_PHONE,
+								getDevicePhoneNumber());
+						sharedPrefsEditor.commit();
+
+						dialog.dismiss();
+					}
+				});
 		AlertDialog alert = alertDialogBuilder.create();
 		alert.show();
+
 	}
 
 	private void showAlertDialog(String reason) {
-		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(NG911Activity.this);
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+				NG911Activity.this);
 		alertDialogBuilder.setCancelable(true);
 		alertDialogBuilder.setTitle(reason);
 		alertDialogBuilder.setMessage("Exiting app, call 911?");
 
-		alertDialogBuilder.setPositiveButton("Call 911", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				Intent callIntent = new Intent(Intent.ACTION_CALL);
-				callIntent.setData(Uri.parse("tel:" + 35354));
-				callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				startActivity(callIntent);
-			}
-		});
+		alertDialogBuilder.setPositiveButton("Call 911",
+				new DialogInterface.OnClickListener() {
 
-		alertDialogBuilder.setNegativeButton("Exit", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				dialog.dismiss();
-				finish();
-			}
-		});
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+						Intent callIntent = new Intent(Intent.ACTION_CALL);
+						callIntent.setData(Uri.parse("tel:" + 35354));
+						callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						startActivity(callIntent);
+						// finish();
+					}
+				});
+
+		alertDialogBuilder.setNegativeButton("Exit",
+				new DialogInterface.OnClickListener() {
+
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+						dialog.dismiss();
+						finish();
+					}
+				});
+		// AlertDialog.Builder
+		// alertDialogBuilder=initializeAlertDialog("No Network Connectivity",
+		// "Exiting app..Call 911?");
 		AlertDialog alert = alertDialogBuilder.create();
 		alert.show();
 	}
 
+	
+	
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// TODO Auto-generated method stub
@@ -428,9 +526,9 @@ public class NG911Activity extends Activity {
 				sip.send(MEDICAL_EMERGENCY);
 				customArrayAdapter.add("Me: TEMPLATE: " + MEDICAL_EMERGENCY,FLAG_MESSAGE_FROM_USER);
 				break;
-
+				
 		}
-
+		
 		return super.onOptionsItemSelected(item);
 	}
 
@@ -439,7 +537,7 @@ public class NG911Activity extends Activity {
 		// TODO Auto-generated method stub
 		MenuInflater inflater=getMenuInflater();
 		inflater.inflate(R.menu.menu, menu);
-
+		
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -447,115 +545,135 @@ public class NG911Activity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
+//		if (data != null) {
+//			if (!data.getExtras().isEmpty()) {
+				if (requestCode == PHOTO_RESULT) {
 
-		if (requestCode == PHOTO_RESULT) {
+					Bitmap photoResult = (Bitmap) data.getExtras().get("data");
+					ImageView imageView = new ImageView(
+							this.getApplicationContext());
+					imageView.setImageBitmap(photoResult);
+					setContentView(imageView);
 
-			Bitmap photoResult = (Bitmap) data.getExtras().get("data");
-			ImageView imageView = new ImageView(
-					this.getApplicationContext());
-			imageView.setImageBitmap(photoResult);
-			setContentView(imageView);
-
-		}
-		if (requestCode == IMAGE_RECEIVED_RESULT) {
-			byte[] imageBytes = JpegImage.imageBytes;
-			Log.e("NG911 byte length",""+imageBytes.length);
-			String imageString = new String(imageBytes);
-			Log.e("NG911 image String byte length" ,""+ imageString.getBytes().length);
-			Log.e("Image String final: ", imageString);
-
-			try {
-				sip.sendImage(imageString);
-				customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
-				Log.e(TAG,"image sent*****");
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				customArrayAdapter.addErrorMessage("Error Sending Image");
-			}
-
-			/*
-			Uri uri = (Uri) data.getExtras().get(
-					CameraCapture.JPEG_STRING);
-			try {
-				InputStream is = getContentResolver().openInputStream(
-						uri);
-				InputStreamReader isr = new InputStreamReader(is);
-				BufferedReader br = new BufferedReader(isr);
-
-				StringBuilder sb = new StringBuilder();
-
-				String read = br.readLine();
-				int i = 0;
-				while (read != null) {
-					read = br.readLine();
-					sb.append(read);
 				}
-				String jpegString = sb.toString();
+				if (requestCode == IMAGE_RECEIVED_RESULT) {
+					// byte[] jpegByteArray=(byte[])
+					// data.getExtras().get(CameraCapture.JPEG_STRING);
+			
+					
+					byte[] imageBytes = JpegImage.imageBytes;
+					Log.e("NG911 byte length",""+imageBytes.length);
+					String imageString = new String(imageBytes);
+					Log.e("NG911 image String byte length" ,""+ imageString.getBytes().length);
+					Log.e("Image String final: ", imageString);
+					
+					
+					try {
+						sip.sendImage(imageString);
+						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
+						Log.e(TAG,"image sent*****");
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						customArrayAdapter.addErrorMessage("Error Sending Image");
+					}
+/*					
+					Uri uri = (Uri) data.getExtras().get(
+							CameraCapture.JPEG_STRING);
+					try {
+						InputStream is = getContentResolver().openInputStream(
+								uri);
+						InputStreamReader isr = new InputStreamReader(is);
+						BufferedReader br = new BufferedReader(isr);
 
-				sip.sendImage(jpegString);
+						StringBuilder sb = new StringBuilder();
 
-				Log.e(TAG, "jpegString is: " + jpegString);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			Log.e(TAG, "Received image result from cameraCapture class");
+						String read = br.readLine();
+						int i = 0;
+						while (read != null) {
+							read = br.readLine();
+							sb.append(read);
+						}
+						String jpegString = sb.toString();
+						
+						sip.sendImage(jpegString);
 
-			Bitmap pictureTaken = BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.length);
-			Log.e(TAG+"onpictureTaken()","bitmap is: "+pictureTaken.toString());
-			ImageView imageView = new
-			ImageView(getApplicationContext());
-			imageView.setImageBitmap(pictureTaken);
-			setContentView(imageView);
-			*/
+						Log.e(TAG, "jpegString is: " + jpegString);
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					Log.e(TAG, "Received image result from cameraCapture class");
 
-		}
+*/					
+					
+					
+					// Bitmap pictureTaken =
+					// BitmapFactory.decodeByteArray(jpegByteArray, 0,
+					// jpegByteArray.length);
+					// Log.e(TAG+
+					// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
+					// ImageView imageView = new
+					// ImageView(getApplicationContext());
+					// imageView.setImageBitmap(pictureTaken);
+					// setContentView(imageView);
+
+				}
+//			}
+//		}
 	}
 
+	
+	
 	public static byte[] getBytesFromFile(String fileName) throws IOException {
+	    
+//		FileInputStream fis=openFileInput()
 		File file = new File(fileName);
 		InputStream is = new FileInputStream(file);
 
-		// Get the size of the file
-		long length = file.length();
-		Log.e("File Length: ",""+length);
-		// You cannot create an array using a long type.
-		// It needs to be an int type.
-		// Before converting to an int type, check
-		// to ensure that file is not larger than Integer.MAX_VALUE.
-		if (length > Integer.MAX_VALUE) {
-			// File is too large
-		}
 
-		// Create the byte array to hold the data
-		byte[] bytes = new byte[(int)length];
+	    // Get the size of the file
+	    long length = file.length();
+	    Log.e("File Length: ",""+length);
+	    // You cannot create an array using a long type.
+	    // It needs to be an int type.
+	    // Before converting to an int type, check
+	    // to ensure that file is not larger than Integer.MAX_VALUE.
+	    if (length > Integer.MAX_VALUE) {
+	        // File is too large
+	    }
 
-		// Read in the bytes
-		int offset = 0;
-		int numRead = 0;
-		while (offset < bytes.length
-				&& (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
-			offset += numRead;
-		}
+	    // Create the byte array to hold the data
+	    byte[] bytes = new byte[(int)length];
 
-		// Ensure all the bytes have been read in
-		if (offset < bytes.length) {
-			throw new IOException("Could not completely read file "+file.getName());
-		}
+	    // Read in the bytes
+	    int offset = 0;
+	    int numRead = 0;
+	    while (offset < bytes.length
+	           && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+	        offset += numRead;
+	    }
 
-		// Close the input stream and return bytes
-		is.close();
-		return bytes;
+	    // Ensure all the bytes have been read in
+	    if (offset < bytes.length) {
+	        throw new IOException("Could not completely read file "+file.getName());
+	    }
+
+	    // Close the input stream and return bytes
+	    is.close();
+	    return bytes;
 	}
-
-
+	
+	
+	
+	
 	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
+
 			Intent intent = new Intent(getBaseContext(), CameraCapture.class);
 			startActivityForResult(intent, IMAGE_RECEIVED_RESULT);
 
@@ -563,6 +681,7 @@ public class NG911Activity extends Activity {
 			// Intent intent = new Intent(
 			// android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 			// startActivityForResult(intent, PHOTO_RESULT);
+
 		}
 	};
 
@@ -599,45 +718,52 @@ public class NG911Activity extends Activity {
 				}
 			}
 			flagLostSent = true;
+			// }
 		}
 
 		public void onProviderDisabled(String provider) {
 			// TODO Auto-generated method stub
+
 		}
 
 		public void onProviderEnabled(String provider) {
 			// TODO Auto-generated method stub
+
 		}
 
 		public void onStatusChanged(String provider, int status, Bundle extras) {
 			// TODO Auto-generated method stub
+
 		}
+
 	};
 
 	@Override
-		protected void onDestroy() {
-			// TODO Auto-generated method stub
-			super.onDestroy();
-		}
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+	}
 
 	@Override
-		protected void onPause() {
-			// TODO Auto-generated method stub
-			sipController.hangup();
-			super.onPause();
-			// locationManager.removeUpdates(locationListener);
-		}
+	protected void onPause() {
+		// TODO Auto-generated method stub
+//		sipController.hangup();
+		super.onPause();
+		// locationManager.removeUpdates(locationListener);
+	}
 
 	@Override
-		protected void onResume() {
-			// TODO Auto-generated method stub
-			sipController.call();
-			super.onResume();
-		}
+	protected void onResume() {
+		// TODO Auto-generated method stub
+//		sipController.call();
+		super.onResume();
+	}
 
 	public void displayIncoming(String message) {
 		// System.out.println("\n PSAP: "+message);
-		Toast.makeText(getApplicationContext(), "Received:" + message, Toast.LENGTH_LONG).show();
+		Toast.makeText(getApplicationContext(), "Received:" + message,
+				Toast.LENGTH_LONG).show();
+
 	}
 
 	public String getLocalIpAddress() {
@@ -662,7 +788,9 @@ public class NG911Activity extends Activity {
 	public void notifyTimeout(MessageTime mt) {
 		// TODO : Code to update UI if the delivery of a message failed.
 		Log.e("Timeout", mt.message + "/" + mt.tag);
-		Toast.makeText(getApplicationContext(), mt.message + ": Not Delivered!", Toast.LENGTH_LONG).show();
+		Toast.makeText(getApplicationContext(),
+				mt.message + ": Not Delivered!", Toast.LENGTH_LONG).show();
+
 	}
 
 	@Override
@@ -678,13 +806,13 @@ public class NG911Activity extends Activity {
 			 * 
 			 **************************/
 			locationManager = (LocationManager) this
-				.getSystemService(Context.LOCATION_SERVICE);
+					.getSystemService(Context.LOCATION_SERVICE);
 			boolean isGPSEnabled = locationManager
-				.isProviderEnabled(LocationManager.GPS_PROVIDER);
+					.isProviderEnabled(LocationManager.GPS_PROVIDER);
 			if (isGPSEnabled) {
 				locationManager
-					.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-							1000, 0, locationListener);
+						.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+								1000, 0, locationListener);
 
 			} else {
 				locationManager.requestLocationUpdates(
@@ -705,48 +833,53 @@ public class NG911Activity extends Activity {
 	EditText sendMessageEditText;
 
 	OnKeyListener rttTextListener = new OnKeyListener() {
-	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		// TODO Auto-generated method stub
-		Log.e(TAG, "onKey() of rttTextListener called");
+		public boolean onKey(View v, int keyCode, KeyEvent event) {
+			// TODO Auto-generated method stub
+			Log.e(TAG, "onKey() of rttTextListener called");
 
-		if (keyCode == KeyEvent.KEYCODE_0) {
-			Log.e(TAG, "caught 0");
+			if (keyCode == KeyEvent.KEYCODE_0) {
+				Log.e(TAG, "caught 0");
+			}
+
+			char keyLabel = event.getDisplayLabel();
+			String keyLabelString = String.valueOf(keyLabel);
+			Log.e(TAG,
+					"onKey() event keyLabel= " + keyLabelString + " keyCode= "
+							+ event.getKeyCode() + " Unicode= "
+							+ event.getUnicodeChar());
+			if (keyCode == 67)
+				sipController.sendRTT((char) 0x08);
+			return false;
 		}
 
-		char keyLabel = event.getDisplayLabel();
-		String keyLabelString = String.valueOf(keyLabel);
-		Log.e(TAG,
-				"onKey() event keyLabel= " + keyLabelString + " keyCode= "
-				+ event.getKeyCode() + " Unicode= "
-				+ event.getUnicodeChar());
-		if (keyCode == 67)
-			sipController.sendRTT((char) 0x08);
-		return false;
-	}
-
 	};
-
+	
 	boolean isTimerTaskScheduled=false;
 	boolean isCompleteTextTimerTaskScheduled=false;
 	Timer timeOutTimer= new Timer();
 	Timer completeTextTimer= new Timer();
-
+	
 	TextWatcher rttTextWatcher = new TextWatcher() {
-		public void onTextChanged(CharSequence s, int start, int before, int count) {
+		public void onTextChanged(CharSequence s, int start, int before,
+				int count) {
 			// TODO Auto-generated method stub
-			/*
 			Log.e(TAG, "onTextChanged() new char sequence is " + s + " start="
 					+ start + " ,before= " + before + ",count= " + count);
-			Log.e(TAG, "new charSequence is =" + s.subSequence(start, start + count));
-			*/
+			Log.e(TAG,
+					"new charSequence is ="
+							+ s.subSequence(start, start + count));
 
 			RadioButton rb=(RadioButton)findViewById(R.id.RTP);
-			if(rb.isChecked()) {
-				// RTT send
-				if (count > 0)
-					if (s.charAt(start) != '\n')
+			if(rb.isChecked()){
+			// RTT send
+				if (count > 0) {
+					if ((int)s.charAt(start) != 10)
 						sipController.sendRTT(s.charAt(start));
-
+					else
+						sipController.sendRTT('\r');
+				}
+					
+				
 				if(isTimerTaskScheduled){
 					timeOutTimer.cancel();
 					timeOutTimer.purge();
@@ -760,27 +893,27 @@ public class NG911Activity extends Activity {
 				if(sendMessageEditText.getLineCount()>1){
 
 					customArrayAdapter.add("User: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_USER);
-					sipController.sendRTT(T140Constants.CR_LF);
+					sipController.sendRTT(T140Constants.LINE_FEED);
 					sendMessageEditText.setText("");
-
+					
 				}else if(count>0&& String.valueOf(s.charAt(start)).equals(".")){
-
+					
 					timeOutTimer.schedule(new TimeOutTimerTask(rttTimeOutHandler), 4000 );
 					isTimerTaskScheduled=true;
-
+					
 				}else{
 					completeTextTimer.schedule(new CompleteTextTimerTask(rttCompleteTextHandler),10000);
 					isCompleteTextTimerTaskScheduled=true;
 				}
 			}
 		}	
-
+		
 		class CompleteTextTimerTask extends TimerTask{
 			Handler handler;
 			public CompleteTextTimerTask(Handler handler){
 				this.handler=handler;
 			}
-
+			
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
@@ -788,19 +921,21 @@ public class NG911Activity extends Activity {
 				handler.sendMessage(msg);
 				isCompleteTextTimerTaskScheduled=false;
 			}
+			
 		}
-
-
+		
+		
 		class TimeOutTimerTask extends TimerTask{
 			Handler handler;
 			public TimeOutTimerTask(Handler handler){
 				this.handler=handler;
 			}
-
+			
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
 				if(sendMessageEditText.getText().toString().length()>0){
+//					customArrayAdapter.add("911: "+sendMessageEditText.getText().toString(),FLAG_MESSAGE_FROM_911);
 					Message msg= new Message();
 					msg.obj=sendMessageEditText.getText().toString();
 					handler.sendMessage(msg);
@@ -808,7 +943,7 @@ public class NG911Activity extends Activity {
 				}
 			}
 		};
-
+		
 		public void beforeTextChanged(CharSequence s, int start, int count,
 				int after) {
 			// TODO Auto-generated method stub
@@ -825,6 +960,9 @@ public class NG911Activity extends Activity {
 	protected void onStop() {
 		// TODO Auto-generated method stub
 		super.onStop();
+
 		locationManager.removeUpdates(locationListener);
 	}
+	
+	
 }

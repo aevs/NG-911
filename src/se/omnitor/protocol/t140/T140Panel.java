@@ -133,7 +133,7 @@ public class T140Panel implements T140EventHandler {
     	try {
 	    	System.out.println("Receiving [" + (int)inText.charAt(0) + "]: " + inText);
 	    	//out.write(call_id+" "+inText+"\n");
-	    	out.write((int)inText.charAt(0));
+	    	out.write(inText);
 	    	out.flush();
 	    	
 	    	// If a character is received, put it in receive_buffer
@@ -147,7 +147,7 @@ public class T140Panel implements T140EventHandler {
     	try {
 	    	System.out.println("Receiving [8]: BS");
 	    	//out.write(call_id+" BS\n");
-		out.write(0x08);
+	    	out.write(0x08);
 	    	out.flush();
 	    	
 	    	// If BS is received, delete the latest received in receive_buffer

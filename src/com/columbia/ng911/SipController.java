@@ -30,8 +30,6 @@ import org.zoolu.sip.transaction.TransactionClient;
 import org.zoolu.sip.transaction.TransactionClientListener;
 import org.zoolu.sip.transaction.TransactionServer;
 
-import se.omnitor.protocol.t140.T140Constants;
-
 import android.util.Log;
 import android.widget.TextView;
 
@@ -49,7 +47,7 @@ public class SipController {
         private boolean isRTTconnected = false;
         
         private String phoneNumber;
-        private char prevChar;
+        char prevChar;
         
         SipController(String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
                 SipStack.log_path = "/data/misc/tmp/";
@@ -72,7 +70,6 @@ public class SipController {
                 String contact_url = "sip:Android("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
                 ua = new UserAgent(sip, this.localIpAddress, contact_url, writer);
                 ua.listen();
-                
                 prevChar = 0;
         }
         
@@ -80,7 +77,7 @@ public class SipController {
         	return sip;
         }
         
-        public synchronized void call() {
+        public void call() {
         	if (isRTTconnected == false) {
 	        	ua.hangup();
 	        	ua.call(this.serverIpAddress, this.serverPort);
@@ -97,16 +94,11 @@ public class SipController {
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
-        	/* 
-        	 * Now, Po-Shun Support both SIP Instant and RTT at the same time.
-        	 * So, we don't need to open and close RTT session again.
-        	 *  
         	if (!isRTTconnected && isRealTime) {
         		this.call();
         	} else if (!isRealTime) {
         		this.hangup();
         	}
-        	*/
         }
         
         public boolean isRealTime() {
@@ -130,15 +122,9 @@ public class SipController {
         
         public void sendRTT(char in) {
         	if (isRealTime == true && isRTTconnected == true) {
-        		if (prevChar == 0 || prevChar != T140Constants.CR_LF || in != T140Constants.CR_LF) {
-        			Log.e("RTT", "Send : [" + in + "]");
-        			ua.sendRTT(in);
-        			prevChar = in;
-        		} else if (prevChar == T140Constants.CR_LF) {
-        			Log.e("RTT", "Send : [ none ]");
-        			prevChar = 0;
-        		}
+        		ua.sendRTT(in);
         	}
+        		
         }
 
         public String getLocalIpAddress() { 
