@@ -242,12 +242,18 @@ public class NG911Activity extends Activity {
 //				else
 //					arrayAdapter.remove(tmp);
 
-				t140IncomingBuffer.append(Character.toString(c));
-				tmp = t140IncomingCharSeq.toString();
-				
-//				customArrayAdapter.add(tmp,FLAG_MESSAGE_FROM_911);
-				rttResponseTextView.setText(tmp);
-				
+				if (c == T140Constants.BACKSPACE) {
+					tmp = t140IncomingCharSeq.toString();
+					if (tmp.length() > 0)
+						t140IncomingBuffer.deleteCharAt(tmp.length() - 1);
+					tmp = t140IncomingCharSeq.toString();
+					rttResponseTextView.setText(tmp);
+				} else {
+					t140IncomingBuffer.append(Character.toString(c));
+					tmp = t140IncomingCharSeq.toString();
+					rttResponseTextView.setText(tmp);
+				}
+								
 				if ((int) msg.arg1 == 13){ // \n case
 					t140IncomingBuffer.setLength(0);
 					customArrayAdapter.add(rttResponseTextView.getText().toString(),FLAG_MESSAGE_FROM_911);
@@ -710,7 +716,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
-//		sipController.hangup();
+		sipController.hangup();
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
@@ -718,7 +724,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
-//		sipController.call();
+		sipController.call();
 		super.onResume();
 	}
 

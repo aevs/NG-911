@@ -143,7 +143,7 @@ public class UserAgent extends CallListenerAdapter {
                 Log.e("SIP:UA - remote text port = ", Integer.toString(t140_remote_port));
                 
                 //To Testing RTP Sesstion for RTT (Real Time Text)
-            	appController.start(this.from_url, t140_local_port, this.serverIpAddress, t140_remote_port, 0, 1, 0);
+            	appController.start(this.from_url, t140_local_port, this.serverIpAddress, t140_remote_port, 1, 1, 1);
         }
 
         public boolean listen() {
