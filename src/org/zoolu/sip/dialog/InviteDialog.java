@@ -180,55 +180,50 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
      */
    public void invite(String callee, String caller, String contact, String session_descriptor)
    {  printLog("inside invite(callee,caller,contact,sdp)",LogLevel.MEDIUM);
-           if (!statusIs(D_INIT)) return;
-           // else
-           NameAddress to_url=new NameAddress(callee);
-           NameAddress from_url=new NameAddress(caller);
-           SipURL request_uri=to_url.getAddress();
+       if (!statusIs(D_INIT)) return;
+       // else
+       NameAddress to_url=new NameAddress(callee);
+       NameAddress from_url=new NameAddress(caller);
+       SipURL request_uri=to_url.getAddress();
 
-           NameAddress contact_url=null;
-           if (contact!=null)
-           {  if (contact.indexOf("sip:")>=0) contact_url=new NameAddress(contact);
-                   else contact_url=new NameAddress(new SipURL(contact,sip_provider.getViaAddress(),sip_provider.getPort()));
-           }
-           else contact_url=from_url;
-           
-           /* Original MJSIP Invite */
-           Message invite;
-	   /*
-           if (Geolocation.getIsUpdated()) {
-        	   String localIpAddress = sip_provider.getViaAddress();
-               String pidflo = Geolocation.getGeolocation();
-               String body = "--boundary1\r\nContent-Type:application/sdp\r\n\r\n";
+       NameAddress contact_url=null;
+       if (contact!=null)
+       {  if (contact.indexOf("sip:")>=0) contact_url=new NameAddress(contact);
+           else contact_url=new NameAddress(new SipURL(contact,sip_provider.getViaAddress(),sip_provider.getPort()));
+       }
+       else contact_url=from_url;
 
-               invite=MessageFactory.createInviteRequest(sip_provider, request_uri, to_url, from_url, contact_url, session_descriptor);
+       /* Original MJSIP Invite */
+       Message invite;
+       String localIpAddress = sip_provider.getViaAddress();
+       String pidflo = Geolocation.getGeolocation();
+       String body = "--boundary1\r\nContent-Type:application/sdp\r\n\r\n";
 
-               Header h1 = new Header("Geolocation","<cid:Android@"+localIpAddress+">");
-               invite.addHeaderAfter(h1, "Call-ID");
-               Header h2 = new Header("Geolocation-Routing", "yes");
-               invite.addHeaderAfter(h2, "Geolocation");
-               Header h3 = new Header("Accept", "text/plain, application/pidf+xml");
-               invite.addHeaderAfter(h3, "Geolocation-Routing");
+       invite=MessageFactory.createInviteRequest(sip_provider, request_uri, to_url, from_url, contact_url, session_descriptor);
 
-               body = body + session_descriptor;
-               body = body + "\r\n--boundary1=\r\n";
-               body = body + pidflo + "\r\n\r\n--boundary1=--\r\n";
+       Header h1 = new Header("Geolocation","<cid:Android@"+localIpAddress+">");
+       invite.addHeaderAfter(h1, "Call-ID");
+       Header h2 = new Header("Geolocation-Routing", "yes");
+       invite.addHeaderAfter(h2, "Geolocation");
+       Header h3 = new Header("Accept", "text/plain, application/pidf+xml");
+       invite.addHeaderAfter(h3, "Geolocation-Routing");
 
-               invite.setBody("multipart/mixed; boundary=\"boundary1=\"", body);
-               
-               Header h0 = new Header("From", "<" + contact + ">");
-       		   invite.addHeaderAfter(h0, "To");
-           } else {
-	   */
-        	   invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
-        	   Header h0 = new Header("From", "<" + contact + ">");
-       		   invite.addHeaderAfter(h0, "To");
-	   /*
-           }
-	   */
+       body = body + session_descriptor;
+       body = body + "\r\n--boundary1=\r\n";
+       body = body + pidflo + "\r\n\r\n--boundary1=--\r\n";
 
-           // do invite
-           invite(invite);
+       invite.setBody("multipart/mixed; boundary=\"boundary1=\"", body);
+
+       Header h0 = new Header("From", "<" + contact + ">");
+       invite.addHeaderAfter(h0, "To");
+       /*
+       invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
+       Header h0 = new Header("From", "<" + contact + ">");
+       invite.addHeaderAfter(h0, "To");
+       */
+
+       // do invite
+       invite(invite);
    }
 
    /** Starts a new InviteTransactionClient

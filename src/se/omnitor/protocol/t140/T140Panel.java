@@ -133,7 +133,7 @@ public class T140Panel implements T140EventHandler {
     	try {
 	    	System.out.println("Receiving [" + (int)inText.charAt(0) + "]: " + inText);
 	    	//out.write(call_id+" "+inText+"\n");
-	    	out.write(inText);
+	    	out.write((int)inText.charAt(0));
 	    	out.flush();
 	    	
 	    	// If a character is received, put it in receive_buffer

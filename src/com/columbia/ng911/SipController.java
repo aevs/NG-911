@@ -130,10 +130,12 @@ public class SipController {
         
         public void sendRTT(char in) {
         	if (isRealTime == true && isRTTconnected == true) {
-        		if (prevChar == 0 || prevChar != T140Constants.CR_LF) {
+        		if (prevChar == 0 || prevChar != T140Constants.CR_LF || in != T140Constants.CR_LF) {
+        			Log.e("RTT", "Send : [" + in + "]");
         			ua.sendRTT(in);
         			prevChar = in;
         		} else if (prevChar == T140Constants.CR_LF) {
+        			Log.e("RTT", "Send : [ none ]");
         			prevChar = 0;
         		}
         	}
