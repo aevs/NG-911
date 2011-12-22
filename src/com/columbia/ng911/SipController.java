@@ -51,7 +51,7 @@ public class SipController {
         
         SipController(String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
                 SipStack.log_path = "/data/misc/tmp/";
-                SipStack.debug_level = 0;
+                SipStack.debug_level = 7;
 
                 //this.serverID = serverID;
                 this.serverIpAddress = ipAddress;
@@ -69,7 +69,7 @@ public class SipController {
                 // UserAgent
                 String contact_url = "sip:Android("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
                 ua = new UserAgent(sip, this.localIpAddress, contact_url, writer);
-                ua.listen();
+                //ua.listen();
                 prevChar = 0;
         }
         
@@ -94,11 +94,13 @@ public class SipController {
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
+        	/*
         	if (!isRTTconnected && isRealTime) {
         		this.call();
         	} else if (!isRealTime) {
         		this.hangup();
         	}
+        	*/
         }
         
         public boolean isRealTime() {

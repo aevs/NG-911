@@ -5,10 +5,10 @@ public class Geolocation {
 	private static boolean isUpdated=false;
 	//A static function to get the PIDF-LO. Now this function can be called from wherever as needed.
 	
-	public static void updateGeolocatoin(String lon, String lat)
+	public static void updateGeolocatoin(String lon, String lat, String ipAddress)
 	{
 		pidflo ="MIME-Version: 1.0\n"
-				+"Content-ID: <android@192.168.2.6>\n"
+				+"Content-ID: <android@"+ipAddress+">\n"
 				+"Content-Type: application/pidf+xml\n"
 				+"Content-Transfer-Encoding: 8bit\n\n"
 		+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"

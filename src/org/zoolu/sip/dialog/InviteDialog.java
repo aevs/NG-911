@@ -200,7 +200,7 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
            if (Geolocation.getIsUpdated()) {
         	   String localIpAddress = sip_provider.getViaAddress();
                String pidflo = Geolocation.getGeolocation();
-               String body = "--boundary1\r\nContent-Type:application/sdp\r\n\r\n";
+               String body = "--boundary1=\r\nContent-Type:application/sdp\r\n\r\n";
 
                invite=MessageFactory.createInviteRequest(sip_provider, request_uri, to_url, from_url, contact_url, session_descriptor);
 
@@ -218,10 +218,12 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
                invite.setBody("multipart/mixed; boundary=\"boundary1=\"", body);
                
                Header h0 = new Header("From", "<" + contact + ">");
+               invite.removeHeader("From");
        		   invite.addHeaderAfter(h0, "To");
            } else {
         	   invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
         	   Header h0 = new Header("From", "<" + contact + ">");
+        	   invite.removeHeader("From");
        		   invite.addHeaderAfter(h0, "To");
            }
 

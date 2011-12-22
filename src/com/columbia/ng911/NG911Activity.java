@@ -339,12 +339,11 @@ public class NG911Activity extends Activity {
 				}
 			}
 			
+			sipController.call();
+			
 			Message msg2 = new Message();
 			msg2.arg1 = 1;
 			msgEditTextHandler.sendMessage(msg2);
-			sipController.call();
-			sipController.hangup();
-			sipController.call();
 		}
 	}
 	
@@ -364,9 +363,6 @@ public class NG911Activity extends Activity {
 			// AlertDialog(getBaseContext(),false,);
 			showAlertDialog("No Network Connectivity");
 		}
-		
-		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
-		rttAutoConnectThread.start();
 	}
 
 	/**********
@@ -700,7 +696,8 @@ public class NG911Activity extends Activity {
 
 			Geolocation.updateGeolocatoin(
 					String.valueOf(location.getLongitude()),
-					String.valueOf(location.getLatitude()));
+					String.valueOf(location.getLatitude()),
+					getLocalIpAddress());
 
 			Log.e("Geolocation: ",""+ String.valueOf(location.getLongitude())+
 					String.valueOf(location.getLatitude()));
@@ -747,7 +744,7 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
-//		sipController.hangup();
+		sipController.hangup();
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
@@ -755,7 +752,8 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
-//		sipController.call();
+		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
+		rttAutoConnectThread.start();
 		super.onResume();
 	}
 
