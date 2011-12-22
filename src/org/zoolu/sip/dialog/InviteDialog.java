@@ -31,9 +31,12 @@ import org.zoolu.sip.header.*;
 import org.zoolu.sip.provider.*;
 import org.zoolu.tools.LogLevel;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.columbia.ng911.Geolocation;
+import com.columbia.ng911.NG911Activity;
 
 
 /** Class InviteDialog can be used to manage invite dialogs.

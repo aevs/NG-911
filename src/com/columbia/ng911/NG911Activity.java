@@ -279,7 +279,7 @@ public class NG911Activity extends Activity {
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
-		sipController = new SipController("test", "128.59.22.88", "5080",
+		sipController = new SipController(this, "test", "128.59.22.88", "5080",
 				t140writer, getDevicePhoneNumber());
 
 		sip = new mysip(sipController.getSharedSipProvider(), this,
