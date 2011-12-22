@@ -128,17 +128,19 @@ class TcpTransport implements ConnectedTransport, TcpConnectionListener
          
          byte[] headerBytes = headers.getBytes();
          byte[] imageBytes = JpegImage.imageBytes;
-         
          byte[] finalBytes = new byte[headerBytes.length+imageBytes.length];
-        
-         for(int i=0;i<headerBytes.length;i++){
-        	 finalBytes[i] = headerBytes[i];
-         }
-         int j=0;
-         for(int i=headerBytes.length;i<(headerBytes.length+imageBytes.length);i++){
-        	 finalBytes[i]=imageBytes[j];
-        	 j++;
-         }
+
+         System.arraycopy(headerBytes, 0, finalBytes, 0, headerBytes.length);
+         System.arraycopy(imageBytes,0,finalBytes,headerBytes.length,imageBytes.length);
+         
+//         for(int i=0;i<headerBytes.length;i++){
+//        	 finalBytes[i] = headerBytes[i];
+//         }
+//         int j=0;
+//         for(int i=headerBytes.length;j<(imageBytes.length);i++){
+//        	 finalBytes[i]=imageBytes[j];
+//        	 j++;
+//         }
          
 //         Log.e("ImageBytes: ", "Length:"+String.valueOf(finalBytes[finalBytes.length])+"read:"+String.valueOf(imageBytes[imageBytes.length]));
          Log.e("Modified headers: ",headers);

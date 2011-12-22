@@ -101,7 +101,8 @@ public class CameraCapture extends Activity {
 	PictureCallback jpegCallback = new PictureCallback() {
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
-			JpegImage.setImageBytes(data);
+			Log.e("JpegCallBack",new String(data));
+//			JpegImage.setImageBytes(data);
 			
 //			Log.e(TAG + " onPictureTaken()", "Jpeg data is:********* "
 //					+ jpegString + " ************");
@@ -110,41 +111,41 @@ public class CameraCapture extends Activity {
 			
 			
 			// Display on screen..send to LoSt server
-//			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
-//					data.length);
-//
-//			ContentValues contentValues = new ContentValues();
-//			contentValues.put(Images.Media.TITLE, "image");
-//
-//			Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
-//					contentValues);
-//
-//			OutputStream outputStream;
-//			try {
-//				outputStream = getContentResolver().openOutputStream(uri);
-//				boolean compressed = pictureTaken.compress(
-//						Bitmap.CompressFormat.JPEG, 20, outputStream);
-//				Log.e(TAG, "picture successfully compressed at:" + uri
-//						+ compressed);
-//				outputStream.close();
-//			} catch (FileNotFoundException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//
-//			// Log.e(TAG+
-//			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
-//			// ImageView imageView = new ImageView(getApplicationContext());
-//			// imageView.setImageBitmap(pictureTaken);
-//			// setContentView(imageView);
-//
-//			Log.e(TAG, "jpeg data length " + data.length);
+			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
+					data.length);
+
+			ContentValues contentValues = new ContentValues();
+			contentValues.put(Images.Media.TITLE, "image");
+
+			Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
+					contentValues);
+
+			OutputStream outputStream;
+			try {
+				outputStream = getContentResolver().openOutputStream(uri);
+				boolean compressed = pictureTaken.compress(
+						Bitmap.CompressFormat.JPEG, 20, outputStream);
+				Log.e(TAG, "picture successfully compressed at:" + uri
+						+ compressed);
+				outputStream.close();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// Log.e(TAG+
+			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
+			// ImageView imageView = new ImageView(getApplicationContext());
+			// imageView.setImageBitmap(pictureTaken);
+			// setContentView(imageView);
+
+			Log.e(TAG, "jpeg data length " + data.length);
 
 			Intent intent = new Intent();
-//			intent.putExtra(CameraCapture.JPEG_STRING, uri);
+			intent.putExtra(CameraCapture.JPEG_STRING, uri);
 			setResult(NG911Activity.IMAGE_RECEIVED_RESULT, intent);
 			finish();
 

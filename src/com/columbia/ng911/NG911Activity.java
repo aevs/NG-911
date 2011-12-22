@@ -1,5 +1,6 @@
 package com.columbia.ng911;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -546,8 +547,8 @@ public class NG911Activity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
-//		if (data != null) {
-//			if (!data.getExtras().isEmpty()) {
+		if (data != null) {
+			if (!data.getExtras().isEmpty()) {
 				if (requestCode == PHOTO_RESULT) {
 
 					Bitmap photoResult = (Bitmap) data.getExtras().get("data");
@@ -562,23 +563,39 @@ public class NG911Activity extends Activity {
 					// data.getExtras().get(CameraCapture.JPEG_STRING);
 			
 					
-					byte[] imageBytes = JpegImage.imageBytes;
-					Log.e("NG911 byte length",""+imageBytes.length);
-					String imageString = new String(imageBytes);
-					Log.e("NG911 image String byte length" ,""+ imageString.getBytes().length);
-					Log.e("Image String final: ", imageString);
-					
-					
+//					byte[] imageBytes = JpegImage.imageBytes;
+//					Log.e("NG911 byte length",""+imageBytes.length);
+//					String imageString = new String(imageBytes);
+//					Log.e("NG911 image String byte length" ,""+ imageString.getBytes().length);
+//					Log.e("Image String final: ", imageString);
 					
 					try {
+						Uri uri = (Uri) data.getExtras().get(
+								CameraCapture.JPEG_STRING);
+						byte[] imageBytes=readBytesFromUriInputStream(uri);
+						JpegImage.imageBytes=imageBytes;
+						String imageString= new String(imageBytes);
 						sip.sendImage(imageString);
 						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
-						Log.e(TAG,"image sent*****");
-					} catch (Exception e) {
+
+					} catch (IOException e) {
 						// TODO Auto-generated catch block
-						e.printStackTrace();
 						customArrayAdapter.addErrorMessage("Error Sending Image");
+						e.printStackTrace();
+
 					}
+					
+					
+					
+//					try {
+//						sip.sendImage(imageString);
+//						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
+//						Log.e(TAG,"image sent*****");
+//					} catch (Exception e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//						customArrayAdapter.addErrorMessage("Error Sending Image");
+//					}
 					
 /*					Uri uri = (Uri) data.getExtras().get(
 							CameraCapture.JPEG_STRING);
@@ -624,11 +641,32 @@ public class NG911Activity extends Activity {
 					// setContentView(imageView);
 
 				}
-//			}
-//		}
+			}
+		}
 	}
 
-	
+	public byte[] readBytesFromUriInputStream(Uri uri) throws IOException {
+		
+			InputStream inputStream = getContentResolver().openInputStream(
+					uri);  
+		
+		
+		// this dynamically extends to take the bytes you read
+		  ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+
+		  // this is storage overwritten on each iteration with bytes
+		  int bufferSize = 1024;
+		  byte[] buffer = new byte[bufferSize];
+
+		  // we need to know how may bytes were read to write them to the byteBuffer
+		  int len = 0;
+		  while ((len = inputStream.read(buffer)) != -1) {
+		    byteBuffer.write(buffer, 0, len);
+		  }
+
+		  // and then we can return your byte array.
+		  return byteBuffer.toByteArray();
+		}
 	
 	public  byte[] getBytesFromFile(Uri uri) throws IOException {
 	    
@@ -752,6 +790,7 @@ public class NG911Activity extends Activity {
 	protected void onPause() {
 		// TODO Auto-generated method stub
 //		sipController.hangup();
+		Log.e(TAG,"onPause()");
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}

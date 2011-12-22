@@ -690,7 +690,7 @@ public class SipProvider implements Configurable, TransportListener, TcpServerLi
       if (transport_tcp && proto.equals(PROTO_TCP))
       {  // TCP
          //printLog("using TCP",LogLevel.LOW);
-         if (!connections.containsKey(conn_id))
+//         if (!connections.containsKey(conn_id))
          {  printLog("no active connection found matching "+conn_id,LogLevel.MEDIUM);
             printLog("open "+proto+" connection to "+dest_ipaddr+":"+dest_port,LogLevel.MEDIUM);
             TcpTransport conn=null;
@@ -699,14 +699,16 @@ public class SipProvider implements Configurable, TransportListener, TcpServerLi
             }
             catch (Exception e)
             {  printLog("connection setup FAILED",LogLevel.HIGH);
+            	android.util.Log.e("SipProvider: ", "Set up failed");
                return null;
             }
             printLog("connection "+conn+" opened",LogLevel.HIGH);
             addConnection(conn);
          }
-         else
-         {  printLog("active connection found matching "+conn_id,LogLevel.MEDIUM);
-         }
+//         else
+//         {  printLog("active connection found matching "+conn_id,LogLevel.MEDIUM);
+//     	    android.util.Log.e("SIPProvider","No Conncetion");
+//         }
          ConnectedTransport conn=(ConnectedTransport)connections.get(conn_id);
          if (conn!=null)
          {  printLog("sending data through conn "+conn,LogLevel.MEDIUM);

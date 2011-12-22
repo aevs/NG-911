@@ -186,7 +186,7 @@ public class TcpConnection extends Thread
       is_running=false;
       if (istream!=null) try {  istream.close();  } catch (Exception e) {}
       if (ostream!=null) try {  ostream.close();  } catch (Exception e) {}
-      if (listener!=null) listener.onConnectionTerminated(this,error);
+//      if (listener!=null) listener.onConnectionTerminated(this,error);
       listener=null;
    } 
 
