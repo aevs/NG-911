@@ -357,9 +357,6 @@ public class NG911Activity extends Activity {
 				Log.e("RTTAuto", "Thread Sleep Error");
 			}
 			
-			sipController.sendRTT('\r');
-			sipController.sendRTT('\n');
-			
 			Message msg2 = new Message();
 			msg2.arg1 = 1;
 			msgEditTextHandler.sendMessage(msg2);
