@@ -754,6 +754,8 @@ public class NG911Activity extends Activity {
 	protected void onPause() {
 		// TODO Auto-generated method stub
 		sipController.hangup();
+		android.os.Process.killProcess(android.os.Process.myPid());
+		
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
