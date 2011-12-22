@@ -103,13 +103,13 @@ public class UserAgent extends CallListenerAdapter {
         public void hangup() {
         	if (appController != null)
         		appController.stop();
-        	if (call != null)
+        	if (call != null) {
         		call.hangup();
-        	/*
-        	call.cancel();
-        	call.bye();
-        	call.listen();
-        	*/
+        		call.cancel();
+        		call.bye();
+        		call.listen();
+        		call = null;
+        	}
         }
         
         public void sendRTT(char in) {
