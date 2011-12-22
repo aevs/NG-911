@@ -81,6 +81,7 @@ public class NG911Activity extends Activity {
 	public static final String USER_PHONE = "userPhone";
 	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
+	private boolean isUserNameSet = false;
 	
 	private final String EARTHQUAKE="Earthquake in the area";
 	private final String FIRE="Fire in the area, request fire engine";
@@ -125,7 +126,8 @@ public class NG911Activity extends Activity {
 				.getDefaultSharedPreferences(getApplicationContext());
 		if (!sharedPreferences.getBoolean(USER_DATA_SAVED, false)) {
 			showAlertDialogForUserData();
-		}
+		} else
+			isUserNameSet = true;
 
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -323,6 +325,14 @@ public class NG911Activity extends Activity {
             msg.arg1 = 0;
 			msgEditTextHandler.sendMessage(msg);
 			
+			while (isUserNameSet == false) {
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					Log.e("RTTAuto", "Thread Sleep Error");
+				}
+			}
+			
 			while (sipController == null) {
 				try {
 					Thread.sleep(100);
@@ -437,6 +447,8 @@ public class NG911Activity extends Activity {
 									getDevicePhoneNumber());
 						sharedPrefsEditor.putBoolean(USER_DATA_SAVED, true);
 						sharedPrefsEditor.commit();
+						
+						isUserNameSet = true;
 
 					}
 				});
@@ -455,7 +467,8 @@ public class NG911Activity extends Activity {
 						sharedPrefsEditor.putString(USER_PHONE,
 								getDevicePhoneNumber());
 						sharedPrefsEditor.commit();
-
+						isUserNameSet = true;
+						
 						dialog.dismiss();
 					}
 				});
