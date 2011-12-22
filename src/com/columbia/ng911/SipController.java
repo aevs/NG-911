@@ -30,6 +30,8 @@ import org.zoolu.sip.transaction.TransactionClient;
 import org.zoolu.sip.transaction.TransactionClientListener;
 import org.zoolu.sip.transaction.TransactionServer;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -46,13 +48,20 @@ public class SipController {
         
         private boolean isRTTconnected = false;
         
+        NG911Activity NG911;
+        
         private String phoneNumber;
         char prevChar;
         
-        SipController(String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
+        SipController(NG911Activity ng911, String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 0;
 
+                NG911 = ng911;
+                SharedPreferences prefs = PreferenceManager
+        				.getDefaultSharedPreferences(NG911.getApplicationContext());
+        		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
+        		
                 //this.serverID = serverID;
                 this.serverIpAddress = ipAddress;
                 this.serverPort = port;
@@ -67,9 +76,9 @@ public class SipController {
                 this.phoneNumber = phoneNumber;
                 
                 // UserAgent
-                String contact_url = "sip:Android("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
+                String contact_url = "sip:"+userName+"("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
                 ua = new UserAgent(sip, this.localIpAddress, contact_url, writer);
-                ua.listen();
+                //ua.listen();
                 prevChar = 0;
         }
         
@@ -79,7 +88,6 @@ public class SipController {
         
         public void call() {
         	if (isRTTconnected == false) {
-	        	ua.hangup();
 	        	ua.call(this.serverIpAddress, this.serverPort);
 	        	isRTTconnected = true;
         	}
@@ -94,11 +102,13 @@ public class SipController {
         
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
+        	/*
         	if (!isRTTconnected && isRealTime) {
         		this.call();
         	} else if (!isRealTime) {
         		this.hangup();
         	}
+        	*/
         }
         
         public boolean isRealTime() {

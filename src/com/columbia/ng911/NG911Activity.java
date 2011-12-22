@@ -82,7 +82,8 @@ public class NG911Activity extends Activity {
 	public static final String USER_PHONE = "userPhone";
 	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
-	
+	private boolean isUserNameSet = false;
+	private static boolean killProcess = true;
 	private final String EARTHQUAKE="Earthquake in the area";
 	private final String FIRE="Fire in the area, request fire engine";
 	private final String MEDICAL_EMERGENCY="Medical emergency, request ambulance";
@@ -126,7 +127,8 @@ public class NG911Activity extends Activity {
 				.getDefaultSharedPreferences(getApplicationContext());
 		if (!sharedPreferences.getBoolean(USER_DATA_SAVED, false)) {
 			showAlertDialogForUserData();
-		}
+		} else
+			isUserNameSet = true;
 
 		connectivityManager = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -278,7 +280,7 @@ public class NG911Activity extends Activity {
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
-		sipController = new SipController("test", "128.59.22.88", "5080",
+		sipController = new SipController(this, "test", "128.59.22.88", "5080",
 				t140writer, getDevicePhoneNumber());
 
 		sip = new mysip(sipController.getSharedSipProvider(), this,
@@ -324,6 +326,14 @@ public class NG911Activity extends Activity {
             msg.arg1 = 0;
 			msgEditTextHandler.sendMessage(msg);
 			
+			while (isUserNameSet == false) {
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					Log.e("RTTAuto", "Thread Sleep Error");
+				}
+			}
+			
 			while (sipController == null) {
 				try {
 					Thread.sleep(100);
@@ -340,12 +350,17 @@ public class NG911Activity extends Activity {
 				}
 			}
 			
+			sipController.call();
+			
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				Log.e("RTTAuto", "Thread Sleep Error");
+			}
+			
 			Message msg2 = new Message();
 			msg2.arg1 = 1;
 			msgEditTextHandler.sendMessage(msg2);
-			sipController.call();
-			sipController.hangup();
-			sipController.call();
 		}
 	}
 	
@@ -365,9 +380,6 @@ public class NG911Activity extends Activity {
 			// AlertDialog(getBaseContext(),false,);
 			showAlertDialog("No Network Connectivity");
 		}
-		
-		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
-		rttAutoConnectThread.start();
 	}
 
 	/**********
@@ -433,6 +445,8 @@ public class NG911Activity extends Activity {
 									getDevicePhoneNumber());
 						sharedPrefsEditor.putBoolean(USER_DATA_SAVED, true);
 						sharedPrefsEditor.commit();
+						
+						isUserNameSet = true;
 
 					}
 				});
@@ -451,7 +465,8 @@ public class NG911Activity extends Activity {
 						sharedPrefsEditor.putString(USER_PHONE,
 								getDevicePhoneNumber());
 						sharedPrefsEditor.commit();
-
+						isUserNameSet = true;
+						
 						dialog.dismiss();
 					}
 				});
@@ -561,7 +576,7 @@ public class NG911Activity extends Activity {
 				if (requestCode == IMAGE_RECEIVED_RESULT) {
 					// byte[] jpegByteArray=(byte[])
 					// data.getExtras().get(CameraCapture.JPEG_STRING);
-			
+					killProcess = true;
 					
 //					byte[] imageBytes = JpegImage.imageBytes;
 //					Log.e("NG911 byte length",""+imageBytes.length);
@@ -715,7 +730,7 @@ public class NG911Activity extends Activity {
 	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
-
+			killProcess = false;
 			Intent intent = new Intent(getBaseContext(), CameraCapture.class);
 			startActivityForResult(intent, IMAGE_RECEIVED_RESULT);
 
@@ -742,7 +757,8 @@ public class NG911Activity extends Activity {
 
 			Geolocation.updateGeolocatoin(
 					String.valueOf(location.getLongitude()),
-					String.valueOf(location.getLatitude()));
+					String.valueOf(location.getLatitude()),
+					getLocalIpAddress());
 
 			Log.e("Geolocation: ",""+ String.valueOf(location.getLongitude())+
 					String.valueOf(location.getLatitude()));
@@ -791,6 +807,8 @@ public class NG911Activity extends Activity {
 		// TODO Auto-generated method stub
 //		sipController.hangup();
 		Log.e(TAG,"onPause()");
+		if(killProcess)
+			android.os.Process.killProcess(android.os.Process.myPid());
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
@@ -798,7 +816,8 @@ public class NG911Activity extends Activity {
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
-//		sipController.call();
+		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
+		rttAutoConnectThread.start();
 		super.onResume();
 	}
 

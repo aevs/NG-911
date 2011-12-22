@@ -85,7 +85,8 @@ public class UserAgent extends CallListenerAdapter {
 
         public boolean call(String target_url, String port) {
         	Log.e("UA", "Contact Url is = " + contact_url);
-            call = new Call(sip_provider, from_url, contact_url, this);
+        	if (call == null)
+        		call = new Call(sip_provider, from_url, contact_url, this);
             if (port != "5060") {
             	call.call(target_url+":"+port,local_session);
             	Log.e("CALL", target_url+":"+port);
@@ -100,12 +101,15 @@ public class UserAgent extends CallListenerAdapter {
         }
         
         public void hangup() {
-        	call.hangup();
-        	call.cancel();
-        	call.bye();
-        	call.listen();
-        		
-        	appController.stop();
+        	if (appController != null)
+        		appController.stop();
+        	if (call != null) {
+        		call.hangup();
+        		call.cancel();
+        		call.bye();
+        		call.listen();
+        		call = null;
+        	}
         }
         
         public void sendRTT(char in) {
@@ -144,7 +148,7 @@ public class UserAgent extends CallListenerAdapter {
                 Log.e("SIP:UA - remote text port = ", Integer.toString(t140_remote_port));
                 
                 //To Testing RTP Sesstion for RTT (Real Time Text)
-            	appController.start(this.from_url, t140_local_port, this.serverIpAddress, t140_remote_port, 0, 1, 0);
+            	appController.start(this.from_url, t140_local_port, this.serverIpAddress, t140_remote_port, 99, 98, 0);
         }
 
         public boolean listen() {
