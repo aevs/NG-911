@@ -82,7 +82,7 @@ public class NG911Activity extends Activity {
 	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
 	private boolean isUserNameSet = false;
-	
+	private static boolean killProcess = true;
 	private final String EARTHQUAKE="Earthquake in the area";
 	private final String FIRE="Fire in the area, request fire engine";
 	private final String MEDICAL_EMERGENCY="Medical emergency, request ambulance";
@@ -577,7 +577,7 @@ public class NG911Activity extends Activity {
 				if (requestCode == IMAGE_RECEIVED_RESULT) {
 					// byte[] jpegByteArray=(byte[])
 					// data.getExtras().get(CameraCapture.JPEG_STRING);
-			
+					killProcess = true;
 					
 					byte[] imageBytes = JpegImage.imageBytes;
 					Log.e("NG911 byte length",""+imageBytes.length);
@@ -691,7 +691,7 @@ public class NG911Activity extends Activity {
 	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
-
+			killProcess = false;
 			Intent intent = new Intent(getBaseContext(), CameraCapture.class);
 			startActivityForResult(intent, IMAGE_RECEIVED_RESULT);
 
@@ -767,7 +767,9 @@ public class NG911Activity extends Activity {
 	protected void onPause() {
 		// TODO Auto-generated method stub
 		sipController.hangup();
-		android.os.Process.killProcess(android.os.Process.myPid());
+		if(killProcess)
+			finish();
+			//		android.os.Process.killProcess(android.os.Process.myPid());
 		
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
