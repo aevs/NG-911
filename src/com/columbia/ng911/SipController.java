@@ -88,7 +88,6 @@ public class SipController {
         
         public void call() {
         	if (isRTTconnected == false) {
-	        	ua.hangup();
 	        	ua.call(this.serverIpAddress, this.serverPort);
 	        	isRTTconnected = true;
         	}

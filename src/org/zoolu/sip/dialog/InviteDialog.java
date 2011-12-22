@@ -200,7 +200,7 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
            //Log.e("SIPCONTROLLER", "From URL - " + from_url);
            /* Original MJSIP Invite */
            Message invite;
-           if (Geolocation.getIsUpdated()) {
+           //if (Geolocation.getIsUpdated()) {
         	   String localIpAddress = sip_provider.getViaAddress();
                String pidflo = Geolocation.getGeolocation();
                String body = "--boundary1=\r\nContent-Type:application/sdp\r\n\r\n";
@@ -223,12 +223,14 @@ public class InviteDialog extends Dialog implements TransactionClientListener, I
                Header h0 = new Header("From", "<" + contact + ">");
                invite.removeHeader("From");
        		   invite.addHeaderAfter(h0, "To");
+           /*
            } else {
         	   invite=MessageFactory.createInviteRequest(sip_provider,request_uri,to_url,from_url,contact_url,session_descriptor);
         	   Header h0 = new Header("From", "<" + contact + ">");
         	   invite.removeHeader("From");
        		   invite.addHeaderAfter(h0, "To");
            }
+           */
 
            // do invite
            invite(invite);
