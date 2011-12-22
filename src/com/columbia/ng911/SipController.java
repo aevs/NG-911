@@ -51,7 +51,7 @@ public class SipController {
         
         SipController(String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
                 SipStack.log_path = "/data/misc/tmp/";
-                SipStack.debug_level = 7;
+                SipStack.debug_level = 0;
 
                 //this.serverID = serverID;
                 this.serverIpAddress = ipAddress;
