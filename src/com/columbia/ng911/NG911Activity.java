@@ -75,6 +75,8 @@ public class NG911Activity extends Activity {
 	private Handler rttCompleteTextHandler;
 	private Handler messageNotSentHandler;
 	private Handler msgEditTextHandler;
+	private Handler imageSentHandler;
+	
 
 	private static mysip sip;
 	private static String TAG = NG911Activity.class.getName();
@@ -208,7 +210,16 @@ public class NG911Activity extends Activity {
 			}
 			
 		};
-		
+		imageSentHandler=new Handler(){
+
+			@Override
+			public void handleMessage(Message msg) {
+				// TODO Auto-generated method stub
+				super.handleMessage(msg);
+				customArrayAdapter.addErrorMessage("Image Sent");
+			}
+			
+		};
 		/************
 		 * Sip message time out handler
 		 * 
@@ -565,6 +576,22 @@ public class NG911Activity extends Activity {
 	}
 
 	
+	class SendImage implements Runnable{
+			String imageString;
+			Handler handler;
+		SendImage(String imageString,Handler handler){
+			this.imageString=imageString;
+			this.handler=handler;
+		}
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			sip.sendImage(imageString);	
+			handler.sendEmptyMessage(2);
+		}
+		
+	}
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
@@ -597,8 +624,9 @@ public class NG911Activity extends Activity {
 						byte[] imageBytes=readBytesFromUriInputStream(uri);
 						JpegImage.imageBytes=imageBytes;
 						String imageString= new String(imageBytes);
-						sip.sendImage(imageString);
-						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
+//						sip.sendImage(imageString);
+						new Thread(new SendImage(imageString,imageSentHandler)).start();
+						customArrayAdapter.addErrorMessage("Sending Image..");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						customArrayAdapter.addErrorMessage("Error Sending Image");
