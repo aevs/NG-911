@@ -53,7 +53,7 @@ public class SipController {
         private String phoneNumber;
         char prevChar;
         
-        SipController(NG911Activity ng911, String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber) {
+        SipController(NG911Activity ng911, String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber,String toIPAddress) {
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 0;
 
@@ -66,7 +66,7 @@ public class SipController {
                 this.serverIpAddress = ipAddress;
                 this.serverPort = port;
 
-                this.localIpAddress = this.getLocalIpAddress(); // for real device!
+                this.localIpAddress = toIPAddress; // for real device!
 
                 sip = new SipProvider(this.localIpAddress, defaultIncomingPort);
                 //sip.addSipProviderListener(SipProvider.ANY, this); // Listener will be mysip class by Pranay
@@ -136,23 +136,4 @@ public class SipController {
         	}
         		
         }
-
-        public String getLocalIpAddress() { 
-                try { 
-                        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                                en.hasMoreElements();) { 
-                                NetworkInterface intf = en.nextElement(); 
-                                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); 
-                                        enumIpAddr.hasMoreElements();) { 
-                                        InetAddress inetAddress = enumIpAddr.nextElement(); 
-                                        if (!inetAddress.isLoopbackAddress()) { 
-                                                return inetAddress.getHostAddress().toString(); 
-                                        } 
-                                } 
-                        } 
-                } catch (SocketException ex) { 
-                        Log.e("NETWORK", ex.toString()); 
-                } 
-                return null; 
-        } 
 }

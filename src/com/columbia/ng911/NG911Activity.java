@@ -40,6 +40,7 @@ import android.preference.PreferenceManager;
 import android.provider.OpenableColumns;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -83,7 +84,8 @@ public class NG911Activity extends Activity {
 	public static final String USER_DATA_SAVED = "userDataSaved";
 	private static final int PHOTO_RESULT = 4433;
 	private boolean isUserNameSet = false;
-	private static boolean killProcess = true;
+	public static boolean killProcess = true;
+	public static boolean isCaptureCam = false;
 	private final String EARTHQUAKE="Earthquake in the area";
 	private final String FIRE="Fire in the area, request fire engine";
 	private final String MEDICAL_EMERGENCY="Medical emergency, request ambulance";
@@ -143,12 +145,15 @@ public class NG911Activity extends Activity {
 				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					public void onCheckedChanged(CompoundButton arg0,
 							boolean arg1) {
+						EditText input=(EditText)findViewById(R.id.message);
 						if (arg1){
 							Log.e("RTT_BUTTON", "yes");
+//							input.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
 							findViewById(R.id.rttResponseWindow).setVisibility(View.VISIBLE);
 							findViewById(R.id.sendMessageButton).setVisibility(View.INVISIBLE);
 						}
 						else{
+//							input.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 							findViewById(R.id.rttResponseWindow).setVisibility(View.INVISIBLE);
 							findViewById(R.id.sendMessageButton).setVisibility(View.VISIBLE);
 							Log.e("RTT_BUTTON", "no");
@@ -184,6 +189,7 @@ public class NG911Activity extends Activity {
 				
 				customArrayAdapter.add("Me: " + incomingMessage,FLAG_MESSAGE_FROM_USER);
 				sendMessageEditText.setText("");
+				sipController.sendRTT('\r');
 				sipController.sendRTT(T140Constants.LINE_FEED);
 				Log.e("MAIN INCOMING: ", incomingMessage);
 			}
@@ -281,7 +287,7 @@ public class NG911Activity extends Activity {
 		};
 		t140writer = new T140Writer(t140Handler);
 		sipController = new SipController(this, "test", "128.59.22.88", "5080",
-				t140writer, getDevicePhoneNumber());
+				t140writer, getDevicePhoneNumber(),getLocalIpAddress());
 
 		sip = new mysip(sipController.getSharedSipProvider(), this,
 				getLocalIpAddress(), sipHandler,messageNotSentHandler);
@@ -296,6 +302,7 @@ public class NG911Activity extends Activity {
 				if (v.getId() == R.id.sendMessageButton) {
 					TextView tv = (TextView) findViewById(R.id.message);
 					String inputMessage = tv.getText().toString();
+					Log.e("inputMessageSIP: ",inputMessage);
 
 					// sipController.send(inputMessage);
 
@@ -574,9 +581,9 @@ public class NG911Activity extends Activity {
 
 				}
 				if (requestCode == IMAGE_RECEIVED_RESULT) {
+					
 					// byte[] jpegByteArray=(byte[])
 					// data.getExtras().get(CameraCapture.JPEG_STRING);
-					killProcess = true;
 					
 //					byte[] imageBytes = JpegImage.imageBytes;
 //					Log.e("NG911 byte length",""+imageBytes.length);
@@ -592,14 +599,12 @@ public class NG911Activity extends Activity {
 						String imageString= new String(imageBytes);
 						sip.sendImage(imageString);
 						customArrayAdapter.add("Image Sent",FLAG_MESSAGE_FROM_USER);
-
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						customArrayAdapter.addErrorMessage("Error Sending Image");
 						e.printStackTrace();
 
 					}
-					
 					
 					
 //					try {
@@ -730,7 +735,9 @@ public class NG911Activity extends Activity {
 	OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
-			killProcess = false;
+			NG911Activity.killProcess = false;
+			NG911Activity.isCaptureCam = true;
+			
 			Intent intent = new Intent(getBaseContext(), CameraCapture.class);
 			startActivityForResult(intent, IMAGE_RECEIVED_RESULT);
 
@@ -806,9 +813,18 @@ public class NG911Activity extends Activity {
 	protected void onPause() {
 		// TODO Auto-generated method stub
 //		sipController.hangup();
-		Log.e(TAG,"onPause()");
-		if(killProcess)
+		Log.e(TAG,"onPause() killProcess = " + killProcess + ", isCaptureCam = " + isCaptureCam);
+		
+		if (!killProcess && isCaptureCam) {
+			killProcess = true;
+		}
+		else if (killProcess && isCaptureCam) {
+			isCaptureCam = false;
+		}
+		else if(killProcess){
 			android.os.Process.killProcess(android.os.Process.myPid());
+		}
+		
 		super.onPause();
 		// locationManager.removeUpdates(locationListener);
 	}
@@ -837,7 +853,9 @@ public class NG911Activity extends Activity {
 						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (!inetAddress.isLoopbackAddress()) {
-						return inetAddress.getHostAddress().toString();
+						String ipAddress=inetAddress.getHostAddress().toString();
+						Log.e("Ipaddress: ",ipAddress);
+						return ipAddress;
 					}
 				}
 			}
@@ -909,6 +927,24 @@ public class NG911Activity extends Activity {
 					"onKey() event keyLabel= " + keyLabelString + " keyCode= "
 							+ event.getKeyCode() + " Unicode= "
 							+ event.getUnicodeChar());
+			if(keyCode==66&& !sipController.isRealTime()){
+				TextView tv = (TextView) findViewById(R.id.message);
+				String inputMessage = tv.getText().toString();
+				Log.e("inputMessageSIP: ",inputMessage);
+
+				// sipController.send(inputMessage);
+
+				//If else condition redundant since send button not displayed in RTT mode
+//				if (sipController.isRealTime())
+//					sipController.sendRTT(T140Constants.CR_LF);
+//				else{
+					if(!inputMessage.startsWith("\n")){
+						sip.send(inputMessage);
+						customArrayAdapter.add("Me: "+inputMessage,FLAG_MESSAGE_FROM_USER);
+					}
+//				}
+				tv.setText("");
+			}
 			if (keyCode == 67)
 				sipController.sendRTT((char) 0x08);
 			return false;
@@ -937,8 +973,10 @@ public class NG911Activity extends Activity {
 				if (count > 0) {
 					if ((int)s.charAt(start) != 10)
 						sipController.sendRTT(s.charAt(start));
-					else
+					else {
 						sipController.sendRTT('\r');
+					}
+					
 				}
 					
 				

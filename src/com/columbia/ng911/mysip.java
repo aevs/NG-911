@@ -83,7 +83,7 @@ public class mysip implements SipProviderListener {
 		Message msg;
 		String header = "MIME-Version: 1.0\nContent-ID: <android@192.168.2.6>\nContent-Type: text/plain\nContent-Transfer-Encoding: 8bit\n\n";
 		sip.setDefaultTransport(SipProvider.PROTO_UDP);
-		if (Geolocation.getIsUpdated()) {
+		if (true) {
 			msg = MessageFactory.createMessageRequest(sip, new NameAddress(
 					new SipURL("test@128.59.22.88:5080")), new NameAddress(
 					new SipURL("android@" + ip + ":" + sip.getPort())), text,
@@ -100,14 +100,15 @@ public class mysip implements SipProviderListener {
 			msg.addHeaderAfter(h3, "Geolocation-Routing");
 //			Geolocation.setIsUpdated(false);
 			Log.e("sending: ", "geolocation");
-		} else {
-			msg = MessageFactory.createMessageRequest(sip, new NameAddress(
-					new SipURL("test@128.59.22.88:5080")), new NameAddress(
-					new SipURL("android@" + ip + ":" + sip.getPort())), text,
-					"text/plain", text);
-
-			Log.e("sending: ", "text");
 		}
+//		else {
+//			msg = MessageFactory.createMessageRequest(sip, new NameAddress(
+//					new SipURL("test@128.59.22.88:5080")), new NameAddress(
+//					new SipURL("android@" + ip + ":" + sip.getPort())), text,
+//					"text/plain", text);
+//
+//			Log.e("sending: ", "text");
+//		}
 
 		msg.removeFromHeader();
 		String tag = SipProvider.pickTag();
