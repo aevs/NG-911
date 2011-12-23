@@ -816,12 +816,16 @@ public class NG911Activity extends Activity {
 		Log.e(TAG,"onPause() killProcess = " + killProcess + ", isCaptureCam = " + isCaptureCam);
 		
 		if (!killProcess && isCaptureCam) {
+			Log.e("CAP", "Start Taking Pic");
 			killProcess = true;
 		}
 		else if (killProcess && isCaptureCam) {
+			Log.e("CAP", "Closing Taking Pic");
 			isCaptureCam = false;
 		}
-		else if(killProcess){
+		
+		if(killProcess && !isCaptureCam){
+			Log.e("CAP", "APP Quit");
 			android.os.Process.killProcess(android.os.Process.myPid());
 		}
 		
