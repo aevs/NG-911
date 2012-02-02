@@ -29,11 +29,13 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+/**
+ * Set up camera preview in order to take camera Image, and provide custom
+ * camera interface to click image and send directly to server.
+ * 
+ */
 public class CameraCapture extends Activity {
 
-	
-	
-	
 	protected static final String JPEG_STRING = "jpegString";
 	private static String TAG = "CameraCapture";
 	private Preview mPreview;
@@ -42,7 +44,6 @@ public class CameraCapture extends Activity {
 
 	private ImageButton takePictureButton = null;
 
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -54,7 +55,7 @@ public class CameraCapture extends Activity {
 		mRelativeLayout.addView(mPreview, new RelativeLayout.LayoutParams(
 				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 
-		 setContentView(mRelativeLayout);
+		setContentView(mRelativeLayout);
 
 		// "take picture" button on camera preview surface
 		takePictureButton = new ImageButton(getApplicationContext());
@@ -62,11 +63,15 @@ public class CameraCapture extends Activity {
 		RelativeLayout.LayoutParams imageButtonParams = new RelativeLayout.LayoutParams(
 				RelativeLayout.LayoutParams.WRAP_CONTENT,
 				RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+		// Position the "take picture" button as align_parent_right.
 		imageButtonParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		imageButtonParams.addRule(RelativeLayout.CENTER_VERTICAL);
-		
 
 		mRelativeLayout.addView(takePictureButton, imageButtonParams);
+
+		// Set click listener which is a callback for when the "take Picture"
+		// button is clicked.
 		takePictureButton.setOnClickListener(takePictureClickListener);
 
 	}
@@ -90,10 +95,6 @@ public class CameraCapture extends Activity {
 	};
 	PictureCallback rawCallback = new PictureCallback() {
 		public void onPictureTaken(byte[] data, Camera camera) {
-			// TODO Auto-generated method stub
-
-			// Log.e(TAG+" onPictureTaken()", "Raw data is:------------- "
-			// + data.length + " -----------");
 
 		}
 	};
@@ -101,13 +102,9 @@ public class CameraCapture extends Activity {
 	PictureCallback jpegCallback = new PictureCallback() {
 		public void onPictureTaken(byte[] data, Camera camera) {
 			// TODO Auto-generated method stub
-			Log.e("JpegCallBack",new String(data));
-//			JpegImage.setImageBytes(data);
-			
-//			Log.e(TAG + " onPictureTaken()", "Jpeg data is:********* "
-//					+ jpegString + " ************");
+			Log.e("JpegCallBack", new String(data));
 
-			// Display on screen..send to LoSt server
+			// Store image byte array as a Bitmap in order to compress.
 			Bitmap pictureTaken = BitmapFactory.decodeByteArray(data, 0,
 					data.length);
 
@@ -118,6 +115,9 @@ public class CameraCapture extends Activity {
 					contentValues);
 
 			OutputStream outputStream;
+			// Compress the image using the compress(). Compression quality set
+			// to 20 with
+			// 100 as best quality and 0 as worst.
 			try {
 				outputStream = getContentResolver().openOutputStream(uri);
 				boolean compressed = pictureTaken.compress(
@@ -133,14 +133,10 @@ public class CameraCapture extends Activity {
 				e.printStackTrace();
 			}
 
-			// Log.e(TAG+
-			// "onpictureTaken()","bitmap is: "+pictureTaken.toString());
-			// ImageView imageView = new ImageView(getApplicationContext());
-			// imageView.setImageBitmap(pictureTaken);
-			// setContentView(imageView);
-
 			Log.e(TAG, "jpeg data length " + data.length);
 
+			// Set result and return image data string to NG911Activity in order
+			// to send to server.
 			Intent intent = new Intent();
 			intent.putExtra(CameraCapture.JPEG_STRING, uri);
 			setResult(NG911Activity.IMAGE_RECEIVED_RESULT, intent);
