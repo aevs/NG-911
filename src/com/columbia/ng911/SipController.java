@@ -1,40 +1,16 @@
-/*
- * Jin Hyung Park (jp2105@columbia.edu)
- *
- * SipController Class
- *
- * Manage SIP provider information, and send or receive text messages are done here
- *
- */
-
 package com.columbia.ng911;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
-
-import org.zoolu.sip.address.NameAddress;
-import org.zoolu.sip.address.SipURL;
-import org.zoolu.sip.header.Header;
-import org.zoolu.sip.message.BaseMessageFactory;
-import org.zoolu.sip.message.Message;
-import org.zoolu.sip.message.MessageFactory;
-import org.zoolu.sip.message.SipMethods;
-import org.zoolu.sip.message.SipResponses;
 import org.zoolu.sip.provider.SipProvider;
-import org.zoolu.sip.provider.SipProviderListener;
 import org.zoolu.sip.provider.SipStack;
-import org.zoolu.sip.transaction.TransactionClient;
-import org.zoolu.sip.transaction.TransactionClientListener;
-import org.zoolu.sip.transaction.TransactionServer;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
-import android.widget.TextView;
 
+/**
+ * SipController Class for RTP session
+ *
+ * Manage SIP provider information, and RTP session handling are done here
+ */
 public class SipController {
         private SipProvider sip;
         private UserAgent ua;
@@ -50,9 +26,19 @@ public class SipController {
         
         NG911Activity NG911;
         
-        private String phoneNumber;
         char prevChar;
         
+        /**
+         * SipController Initializer Method
+         * 
+         * @param ng911 Android GUI Main Activity
+         * @param serverID SIP Server ID to identify if there are several serves
+         * @param ipAddress SIP Server IP Address
+         * @param port SIP Server Port Number
+         * @param writer T140Writer for handling Real-Time-Text
+         * @param phoneNumber User's Phone Number
+         * @param toIPAddress Phone's real IP Address - It can be 3G or WiFi
+         */
         SipController(NG911Activity ng911, String serverID, String ipAddress, String port, T140Writer writer, String phoneNumber,String toIPAddress) {
                 SipStack.log_path = "/data/misc/tmp/";
                 SipStack.debug_level = 0;
@@ -61,31 +47,33 @@ public class SipController {
                 SharedPreferences prefs = PreferenceManager
         				.getDefaultSharedPreferences(NG911.getApplicationContext());
         		String userName = prefs.getString(NG911Activity.USER_NAME, "undefined");
-        		
-                //this.serverID = serverID;
+
                 this.serverIpAddress = ipAddress;
                 this.serverPort = port;
 
                 this.localIpAddress = toIPAddress; // for real device!
 
                 sip = new SipProvider(this.localIpAddress, defaultIncomingPort);
-                //sip.addSipProviderListener(SipProvider.ANY, this); // Listener will be mysip class by Pranay
 
                 System.out.println("\n\n\nLocal Sip Addr = "+ localIpAddress + ":" + sip.getPort());
 
-                this.phoneNumber = phoneNumber;
-                
                 // UserAgent
                 String contact_url = "sip:"+userName+"("+phoneNumber+")@" + this.localIpAddress + ":" + sip.getPort();
                 ua = new UserAgent(sip, this.localIpAddress, contact_url, writer);
-                //ua.listen();
                 prevChar = 0;
         }
         
+        /**
+         * Get Shared SipProvider
+         * @return Shared SipProvider Instance
+         */
         public SipProvider getSharedSipProvider() {
         	return sip;
         }
         
+        /**
+         * Start to send INVITE Message to the server
+         */
         public void call() {
         	if (isRTTconnected == false) {
 	        	ua.call(this.serverIpAddress, this.serverPort);
@@ -93,6 +81,9 @@ public class SipController {
         	}
         }
         
+        /**
+         * Send BYE Message to the server
+         */
         public void hangup() {
         	if (isRTTconnected) {
 	        	ua.hangup();
@@ -100,36 +91,26 @@ public class SipController {
         	}
         }
         
+        /**
+         * Set current mode
+         * @param isRealTime If the current input mode is RTT, isRealTime should be set to 'true'. 
+         */
         public void setIsRealTime(boolean isRealTime) {
         	this.isRealTime = isRealTime;
-        	/*
-        	if (!isRTTconnected && isRealTime) {
-        		this.call();
-        	} else if (!isRealTime) {
-        		this.hangup();
-        	}
-        	*/
         }
         
+        /**
+         * Get current mode
+         * @return If the current input mode is RTT, return 'true'.
+         */
         public boolean isRealTime() {
         	return this.isRealTime;
         }
-
-        /* send SIP message will be done in mysip.java
-        public void send(String text) {
-        	if (isRealTime == false) {
-                Message msg = MessageFactory.createMessageRequest(sip,
-                                new NameAddress(new SipURL("sip:"+ serverIpAddress)),
-                                new NameAddress(new SipURL("sip:"+ localIpAddress)),
-                                null, "text/plain", text + "\r\n");
-                sip.sendMessage(msg);
-                System.out.println("Sent");
-        	} else {
-        		ua.sendRTT('\n');
-        	}
-        }
-        */
         
+        /**
+         * Send RTT one character
+         * @param in User input one character
+         */
         public void sendRTT(char in) {
         	if (isRealTime == true && isRTTconnected == true) {
         		ua.sendRTT(in);

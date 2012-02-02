@@ -67,27 +67,32 @@ import se.omnitor.protocol.t140.T140Packetizer;
 import se.omnitor.protocol.t140.T140DePacketizer;
 import se.omnitor.util.FifoBuffer;
 
+import se.omnitor.protocol.sdp.Format;
 import se.omnitor.protocol.sdp.SdpMedia;
 import se.omnitor.protocol.sdp.media.CustomMedia;
 import se.omnitor.protocol.sdp.format.T140Format;
 import se.omnitor.protocol.sdp.format.RedFormat;
 
 public class AppController {
-
-    private Vector negotiatedMedia;
-
+    private Vector<SdpMedia> negotiatedMedia;
     private SyncBuffer txTextBuffer;
     private FifoBuffer rxTextBuffer;
     private T140Panel t140Panel;
     private T140Packetizer t140Packetizer;
     private T140DePacketizer t140DePacketizer;
-
     private MediaManager mediaManager;
 
+    /**
+     * AppController - Real Time Text Controller Class
+     * 
+     * @param call_id    The unique ID to identify each RTT session
+     * @param out        Output stream to display receving RTT characters
+     * @param log_out    Output stream for logging
+     */
     public AppController(String call_id, Writer out, Writer log_out) {
-
         txTextBuffer = new SyncBuffer(3, 300);
         t140Packetizer = new T140Packetizer(0);
+        
         // set sending handler
         t140Panel = new T140Panel(t140Packetizer, call_id, out, log_out);
         t140Packetizer.setOutBuffer(txTextBuffer);
@@ -101,16 +106,25 @@ public class AppController {
         t140DePacketizer.start();
     }    
 
+    /**
+     * Starting RTT sessions with given parameters
+     * 
+     * @param localIP        The phone's real IP
+     * @param localPort      The port to be opened for RTT connection
+     * @param remoteIP       The SIP server's real IP
+     * @param remotePort     The SIP server's port
+     * @param red_pt         RED value for RTT
+     * @param t140_pt        T140 value for RTT
+     * @param generation     RED Generation value
+     */
     public void start(String localIP, int localPort, String remoteIP, int remotePort,
     		int red_pt, int t140_pt, int generation) {
-    	try {
-    		//deploySdpSettings(true);
-    		
-    		negotiatedMedia = new Vector(0, 1);
+    	try {    		
+    		negotiatedMedia = new Vector<SdpMedia>(0, 1);
     		SdpMedia sdpMedia = new CustomMedia("text", remotePort, "RTP/AVP");
     		((CustomMedia)sdpMedia).setRemoteIp(remoteIP);
-    		Vector formats;
-    	    formats = new Vector(0, 1);
+    		Vector<Format> formats;
+    	    formats = new Vector<Format>(0, 1);
     	    RedFormat rformat = new RedFormat(red_pt);
     	    rformat.setGenerations(generation);
     	    T140Format tformat = new T140Format(t140_pt);
@@ -157,6 +171,11 @@ public class AppController {
         mediaManager.startAll();
     }
 
+    /**
+     * The function processInput actually receives user inputs from the phone.
+     * 
+     * @param in one character which is input by User on the phone
+     */
     public void processInput(char in) {
     	t140Panel.keyTyped(in);
     }

@@ -583,7 +583,7 @@ public class NG911Activity extends Activity {
 			this.imageString=imageString;
 			this.handler=handler;
 		}
-		@Override
+
 		public void run() {
 			// TODO Auto-generated method stub
 			sip.sendImage(imageString);	
@@ -786,7 +786,7 @@ public class NG911Activity extends Activity {
 			 */
 			// if(!flagLostSent){
 			LostConnector lostConnector = LostConnector.getInstance();
-			lostConnector.setContext(getApplicationContext());
+
 			lostConnector.setLocation(location.getLatitude(),
 					location.getLongitude());
 
