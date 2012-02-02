@@ -87,14 +87,10 @@ public class MediaManager {
     private RtpTextTransmitter rtpTextTransmitter;
     private RtpTextReceiver rtpTextReceiver;
 
-
-
     private SyncBuffer txTextBuffer;
     private FifoBuffer rxTextBuffer;
 
-
     private int localTextPort = 0;
-
 
     private Vector mediaStarters;
 
@@ -102,6 +98,13 @@ public class MediaManager {
 
     private boolean isEconf351 = false;
 
+    /**
+     * MediaManager Initilizer Method
+     * 
+     * @param negotiatedMedia The Media Type Vector, which contains SDP types
+     * @param txTextBuffer RTT Transmit Buffer
+     * @param rxTextBuffer RTT Receiving Buffer
+     */
     public MediaManager(Vector negotiatedMedia,
                         SyncBuffer txTextBuffer,
                         FifoBuffer rxTextBuffer) {
@@ -140,6 +143,9 @@ public class MediaManager {
         rtpSessionCreated = false;
     }
 
+    /**
+     * Start All RTT Connections
+     */
     public void startAll() {
 
         int mlen = media.size();
@@ -188,8 +194,7 @@ public class MediaManager {
     }
 
     /**
-     * Stops all media.
-     *
+     * Stops all RTT Connections.
      */
     public void stopAll() {
 
@@ -218,9 +223,12 @@ public class MediaManager {
     }
 
 
+
     /**
      * Starts text transmission.
-     *
+     * 
+     * @param media SDP Media which contains remote IP, Port information with RED/T140 Values
+     * @param format RTP Format, RED or T140 
      */
     private void startTextOut(SdpMedia media, Format format) throws Exception {
         createRTPSession(media.getRemoteIp());
@@ -240,7 +248,6 @@ public class MediaManager {
 
         if (format instanceof T140Format) {
             useT140Red = ((T140Format) format).useRedundancy();
-            //redPt = ((T140Format) format).getRedundancyPayloadType();
             redT140Gen = ((T140Format) format).getRedundantGenerations();
             t140Pt = ((T140Format) format).getPayloadNumber();
         }
@@ -301,13 +308,9 @@ public class MediaManager {
             return;
         }
 
-        //if (sc.getState() == SipController.IS_ESTABLISHED) {
         if (rtpTextTransmitter != null) {
             rtpTextTransmitter.start();
         }
-
-        //}
-
     }
 
     /**
@@ -323,8 +326,13 @@ public class MediaManager {
         }
     }
 
+    /**
+     * Processing incoming text from RTP session
+     * 
+     * @param media SDP Media which contains remote IP, Port information with RED/T140 Values
+     * @param format RTP Format, RED or T140
+     */
     private void startTextIn(SdpMedia media, Format format) throws Exception {
-
         boolean useRed = false;
         int t140Pt = 0;
         int redPt = 0;
@@ -341,19 +349,10 @@ public class MediaManager {
 
         if (format instanceof T140Format) {
             t140Pt = ((T140Format) format).getPayloadNumber();
-            /*System.err.println("format instanceof T140Format");
-            System.err.println("useRed " + useRed);
-            System.err.println("redPt " + redPt);
-            System.err.println("getPayloadNumber() -> " + format.getPayloadNumber());*/
         } else if (format instanceof se.omnitor.protocol.sdp.format.RedFormat) {
             useRed = true;
             redPt = ((se.omnitor.protocol.sdp.format.RedFormat) format).getPayloadNumber();
             t140Pt = ((se.omnitor.protocol.sdp.format.RedFormat) format).getFormatPayloadNumber();
-            /*System.err.println("format instanceof RedFormat");
-            System.err.println("useRed " + useRed);
-            System.err.println("redPt " + redPt);
-            System.err.println("getPayloadNumber() -> " + format.getPayloadNumber()); */
-
         }
 
         rtpTextReceiver =
@@ -369,29 +368,14 @@ public class MediaManager {
             return;
         }
 
-        /*
-        rtpTextReceiver.setCName(appSettings.getUserRealName());
-        rtpTextReceiver.setEmail("sip:" + appSettings.getPrimarySipAddress());
-        */
         rtpTextReceiver.start();
-
-        // Now, wait for the receiver to receive a report from the
-        // remote receiver before we start out transmitter.
-        /*
-          if (rtpTextReceiver != null) {
-            rtpTextReceiver.waitForLocalReceiver(20);
-          }
-         */
-/*
-        if (!allStopped) {
-            ac.getProgramWindow().changeStatusLabel(ProgramWindow.
-                    LABEL_TEXT_IN,
-                    "T.140");
-            ac.getT140Panel().getRemoteTextArea().setActiveLook(true);
-        }
-*/
     }
 
+    /**
+     * MediaStarter
+     * 
+     * Thread Class wrapper to start RTP Session asynchronously
+     */
     class MediaStarter implements Runnable {
 
         public static final int TEXT_IN = 1;
@@ -407,6 +391,13 @@ public class MediaManager {
         private Format format;
         private boolean running;
 
+        /**
+         * MediaStarter Initializer Class
+         * 
+         * @param type RED or T140
+         * @param media SDP Media which contains remote IP, Port information with RED/T140 Values
+         * @param format RTP Format, RED or T140
+         */
         public MediaStarter(int type, SdpMedia media, Format format) {
             this.type = type;
             this.media = media;
@@ -416,6 +407,9 @@ public class MediaManager {
             running = false;
         }
 
+        /**
+         * Start RTP Thread
+         */
         public void start() {
             if (!running) {
                 running = true;
@@ -423,12 +417,18 @@ public class MediaManager {
             }
         }
 
+        /**
+         * Stop RTP Thread
+         */
         public void stop() {
             if (running) {
                 t.interrupt();
             }
         }
 
+        /**
+         * RTP Thread Main Running Function
+         */
         public void run() {
         	try {
 	            switch (type) {
@@ -450,6 +450,11 @@ public class MediaManager {
 
         }
 
+        /**
+         * Identify incoming data type through RTP
+         * @param type Incoming Data
+         * @return Type String
+         */
         public String getType(int type) {
             switch (type) {
             case TEXT_IN:
@@ -472,4 +477,3 @@ public class MediaManager {
     }
 
 }
-

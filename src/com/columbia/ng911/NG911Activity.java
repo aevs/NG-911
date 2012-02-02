@@ -753,7 +753,7 @@ public class NG911Activity extends Activity {
 	LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) {
 			LostConnector lostConnector = LostConnector.getInstance();
-			lostConnector.setContext(getApplicationContext());
+
 			lostConnector.setLocation(location.getLatitude(),
 					location.getLongitude());
 
