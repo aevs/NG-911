@@ -316,6 +316,9 @@ public class NG911Activity extends Activity {
 			}
 		};
 		t140writer = new T140Writer(t140Handler);
+		/*
+		 * Initialize Shared SipController with IRT Web-based SIP Server. 
+		 */
 		sipController = new SipController(this, "test", "128.59.22.88", "5080",
 				t140writer, getDevicePhoneNumber(), getLocalIpAddress());
 
@@ -351,6 +354,9 @@ public class NG911Activity extends Activity {
 		sendMessageEditText.addTextChangedListener(rttTextWatcher);
 	}
 
+	/*
+	 * Thread Helper class for making RTT session automatically
+	 */
 	class RTTAutoConnectThread implements Runnable {
 		public void run() {
 			Message msg = new Message();
@@ -365,6 +371,9 @@ public class NG911Activity extends Activity {
 				}
 			}
 
+			/* RTTautoConnectThread will be initialized during GUI creating.
+			 * So, we need to wait until the SipController being created. 
+			 */
 			while (sipController == null) {
 				try {
 					Thread.sleep(100);
@@ -373,6 +382,9 @@ public class NG911Activity extends Activity {
 				}
 			}
 
+			/* After creating SipController, we also need to wait until
+			 * getting GPS information to find PSAP server.
+			 */
 			while (Geolocation.getIsUpdated() != true) {
 				try {
 					Thread.sleep(100);
@@ -381,6 +393,9 @@ public class NG911Activity extends Activity {
 				}
 			}
 
+			/* After receving GPS Information,
+			 * start making RTT session automatically.
+			 */
 			sipController.call();
 
 			try {
@@ -805,7 +820,12 @@ public class NG911Activity extends Activity {
 
 	@Override
 	protected void onPause() {
-		// TODO Auto-generated method stub
+		/*
+		 * If NG911 application goes on onPause() status,
+		 * we need to quit the application because of RTT session.
+		 * When NG911 application is launched, it tries to make RTT session automatically.
+		 * So, at this point, we need to quit the application instead of putting it onPause status.
+		 */
 		Log.e(TAG, "onPause() killProcess = " + killProcess
 				+ ", isCaptureCam = " + isCaptureCam);
 
@@ -827,7 +847,9 @@ public class NG911Activity extends Activity {
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
+		/* When NG911 gets into resuming status,
+		 * we need to make RTT session again automatically.
+		 */
 		Thread rttAutoConnectThread = new Thread(new RTTAutoConnectThread());
 		rttAutoConnectThread.start();
 		super.onResume();
@@ -839,6 +861,10 @@ public class NG911Activity extends Activity {
 
 	}
 
+	/**
+	 * Utility Function to get the real IP address on the device
+	 * @return IP Address that can be reached the network
+	 */
 	public String getLocalIpAddress() {
 		try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface
